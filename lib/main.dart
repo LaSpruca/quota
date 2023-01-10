@@ -3,6 +3,7 @@ import 'package:quota/pages/add_quote_page.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/pages/books_page.dart';
 import 'package:quota/pages/book_page.dart';
+import 'package:quota/pages/settings_page.dart';
 import 'package:quota/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quota/pages/login_page.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Supabase Flutter',
+      title: 'Quota',
       theme: ThemeData.dark(useMaterial3: true).copyWith(
         primaryColor: Colors.blue,
         textButtonTheme: TextButtonThemeData(
@@ -47,7 +48,9 @@ class MyApp extends StatelessWidget {
                   book: book,
                 )),
         '/new-quote': (_) =>
-            BookArgsExtractor(create: (book, _) => AddQuotePage(book: book))
+            BookArgsExtractor(create: (book, _) => AddQuotePage(book: book)),
+        '/settings': (_) =>
+            BookArgsExtractor(create: (book, _) => SettingsPage(book: book))
       },
     );
   }

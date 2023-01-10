@@ -69,6 +69,28 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _signUp() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await supabase.auth.signUp(
+          password: _passwordController.text,
+          email: _emailController.text,
+          emailRedirectTo:
+              kIsWeb ? null : "nz.laspruca.quotes://login-callback");
+    } on AuthException catch (error) {
+      context.showErrorSnackBar(message: error.message);
+    } catch (error) {
+      context.showErrorSnackBar(message: 'Unexpected error occurred');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     _emailController = TextEditingController();
@@ -149,9 +171,44 @@ class _LoginPageState extends State<LoginPage> {
                   )
                 ],
               ))),
-          const Center(
-            child: Text("Sign up"),
-          )
+          Padding(
+              padding: const EdgeInsets.all(15),
+              child: Form(
+                  child: Column(
+                children: [
+                  TextFormField(
+                    controller: _emailController,
+                    autofillHints: const [AutofillHints.email],
+                    decoration: const InputDecoration(label: Text("Email")),
+                    validator: (value) =>
+                        value != null && emailRegex.hasMatch(value)
+                            ? null
+                            : "Please enter a valid email",
+                    onChanged: (value) => {
+                      setState(() {
+                        _validEmail = emailRegex.hasMatch(value.trim());
+                      })
+                    },
+                  ),
+                  TextField(
+                      controller: _passwordController,
+                      autofillHints: const [AutofillHints.password],
+                      obscureText: true,
+                      onChanged: (value) {
+                        setState(() {
+                          _validPassword = value.trim() != "";
+                        });
+                      },
+                      decoration:
+                          const InputDecoration(label: Text("Password"))),
+                  ElevatedButton(
+                    onPressed: (_validEmail && _validPassword && !_isLoading)
+                        ? _signUp
+                        : null,
+                    child: const Text("Sign up"),
+                  )
+                ],
+              ))),
         ]),
       ));
 }

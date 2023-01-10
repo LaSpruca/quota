@@ -1,23 +1,25 @@
-import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:quota/contants.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'supabase.g.dart';
 
 Map<String, CacheEntry> quotesCache = {};
-List<NewQuote> needsAdding = [];
-List<NewQuote> needsRemoving = [];
 
-Future<void> dump() async {
-  var data = {
-    "quoteCache": quotesCache,
-    "needsAdding": needsAdding,
-    "needsRemoving": needsRemoving
-  };
-  var json = jsonEncode(toJson(data));
-  print(json);
+@JsonSerializable()
+class StoredData {
+  final Map<String, CacheEntry> quotesCache;
+  final List<Quote> needsRemoving;
+  final List<NewQuote> needsAdding;
+
+  StoredData(
+      {required this.quotesCache,
+      required this.needsRemoving,
+      required this.needsAdding});
+
+  factory StoredData.fromJson(Map<String, dynamic> json) =>
+      _$StoredDataFromJson(json);
+  Map<String, dynamic> toJson() => _$StoredDataToJson(this);
 }
 
 @JsonSerializable()
@@ -32,13 +34,34 @@ class CacheEntry {
   Map<String, dynamic> toJson() => _$CacheEntryToJson(this);
 }
 
+class NewBook {
+  late final String name;
+  NewBook({required this.name});
+
+  Future<Book> create() async {
+    return Book.fromSupabase(
+        await supabase.from("books").insert({name: name}).select('*').single());
+  }
+}
+
 @JsonSerializable()
 class Book {
   late final String id;
   late final String owner;
   late final String ownerEmail;
+  late final String name;
 
-  Book({required this.id, required this.owner, required this.ownerEmail});
+  Book(
+      {required this.id,
+      required this.owner,
+      required this.ownerEmail,
+      required this.name});
+
+  factory Book.fromSupabase(Map<String, dynamic> map) => Book(
+      ownerEmail: map["owner_email"],
+      owner: map["owner"],
+      id: map["id"],
+      name: map["book_name"]);
 
   Future<List<Quote>> quotes() async {
     var cachedItem = quotesCache[id];
@@ -48,10 +71,10 @@ class Book {
       return cachedItem.quotes;
     }
 
-    return await fetchQuotes();
+    return await _fetchQuotes();
   }
 
-  Future<List<Quote>> fetchQuotes() async {
+  Future<List<Quote>> _fetchQuotes() async {
     var quotes = (await supabase
             .from("quotes")
             .select<List<Map<String, dynamic>>>()
@@ -69,14 +92,24 @@ class Book {
     quotesCache[id] = CacheEntry(
         expiry: DateTime.now().add(const Duration(hours: 3)), quotes: quotes);
 
-    dump();
-
     return quotes;
   }
 
   factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
 
   Map<String, dynamic> toJson() => _$BookToJson(this);
+
+  Future<dynamic> getMembers() async => await supabase
+      .from("user_connections")
+      .select<List<Map<String, dynamic>>>("user, profiles:user (*)")
+      .eq("book", id);
+}
+
+class Member {
+  final String email;
+  final String id;
+
+  Member({required this.email, required this.id});
 }
 
 @JsonSerializable()
@@ -94,11 +127,16 @@ class Quote {
       required this.person,
       required this.quote});
 
-  /// Connect the generated [_$PersonFromJson] function to the `fromJson`
-  /// factory.
-  factory Quote.fromJson(Map<String, dynamic> json) => _$QuoteFromJson(json);
+  Future<void> delete(BuildContext context) async {
+    try {
+      await supabase.from("quotes").delete().eq("id", id);
+      quotesCache.remove(book);
+    } catch (ex) {
+      context.showErrorSnackBar(message: "Could not delete quote $quote");
+    }
+  }
 
-  /// Connect the generated [_$PersonToJson] function to the `toJson` method.
+  factory Quote.fromJson(Map<String, dynamic> json) => _$QuoteFromJson(json);
   Map<String, dynamic> toJson() => _$QuoteToJson(this);
 }
 

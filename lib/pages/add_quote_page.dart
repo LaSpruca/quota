@@ -82,6 +82,7 @@ class _AddQuotePageState extends State<AddQuotePage> {
                             print("Success");
                             Navigator.of(context).pop(true);
                           }).catchError((ex) {
+                            print("Quote add failed");
                             print(ex);
                             context.showErrorSnackBar(
                                 message: "Could not add quote");
