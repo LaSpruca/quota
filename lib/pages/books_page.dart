@@ -1,6 +1,8 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:quota/books_model.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/pages/book_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,8 +18,7 @@ class BooksPage extends StatefulWidget {
 }
 
 class _BooksPageState extends State<BooksPage> {
-  List<Book> books = [];
-  bool _loading = false;
+  late TextEditingController _bookNameController;
 
   Future<void> _signOut() async {
     try {
@@ -32,51 +33,38 @@ class _BooksPageState extends State<BooksPage> {
     }
   }
 
-  Future<void> _getBooks() async {
-    setState(() {
-      _loading = true;
-    });
-    try {
-      var books =
-          (await supabase.from("books").select<List<Map<String, dynamic>>>())
-              .map(Book.fromSupabase)
-              .toList();
-      // Loaded the cached data and any offline data that might need to be uploaded
-
-      setState(() {
-        this.books = books;
-      });
-    } catch (ex) {
-      print(ex);
-      if (mounted) {
-        context.showSnackBar(message: "Cloud not fetch books");
-      }
-    } finally {
-      setState(() {
-        _loading = false;
-      });
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    _getBooks();
+    _bookNameController = TextEditingController();
+    context.read<BooksModel>().refresh(context);
   }
 
-  Widget _booksView() {
+  @override
+  void dispose() {
+    _bookNameController.dispose();
+    super.dispose();
+  }
+
+  Widget _booksView(
+      BuildContext context, BooksModel booksModel, Widget? child) {
+    final loading = booksModel.loading;
+    final books = booksModel.books;
+
     // If the books are still loading, return a loading spinner
-    if (_loading) {
-      return Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            CircularProgressIndicator(),
-            Text(
-              "Loading",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            )
-          ]);
+    if (loading) {
+      return SizedBox(
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                CircularProgressIndicator(),
+                Text(
+                  "Loading",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )
+              ]));
     }
 
     // Create the list of all children in the column, add a header for `My books`
@@ -111,7 +99,56 @@ class _BooksPageState extends State<BooksPage> {
 
     // Add button to create book and other books heading
     columnChildren.addAll([
-      ElevatedButton(onPressed: () {}, child: const Text("Create Book")),
+      ElevatedButton(
+          onPressed: () {
+            showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                      title: const Text("Add details"),
+                      content: Column(children: [
+                        TextField(
+                          decoration:
+                              const InputDecoration(label: Text("Book name")),
+                          controller: _bookNameController,
+                        )
+                      ]),
+                      actions: [
+                        TextButton(
+                            onPressed: () {
+                              if (_bookNameController.text.trim().isEmpty) {
+                                context.showErrorSnackBar(
+                                    message: "Book name should not be empty");
+                                return;
+                              }
+                              Navigator.pop(context, true);
+                            },
+                            child: const Text("Ok")),
+                        TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("Cancel"))
+                      ],
+                    )).then((result) {
+              if (result ?? false) {
+                if (_bookNameController.text.trim() == "") {
+                  context.showErrorSnackBar(message: "Book name not be empty");
+                  return;
+                }
+
+                _bookNameController.clear();
+                booksModel.refresh(context);
+                final newBook = NewBook(name: _bookNameController.text);
+
+                newBook.create().then((book) {
+                  Navigator.pushNamed(context, "/book",
+                      arguments: BookArgs(book));
+                }).catchError((ex) {
+                  log("Cound not create book", error: ex);
+                  context.showErrorSnackBar(message: "Could not create book");
+                });
+              }
+            });
+          },
+          child: const Text("Create Book")),
       const SizedBox(
         width: 0,
         height: 50,
@@ -127,7 +164,7 @@ class _BooksPageState extends State<BooksPage> {
         books.where((book) => book.owner != user?.id).map((book) => Card(
             margin: const EdgeInsets.all(15.0),
             child: Padding(
-                padding: EdgeInsets.all(10.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Column(children: [
                   Padding(
                       padding: const EdgeInsets.all(10),
@@ -169,11 +206,16 @@ class _BooksPageState extends State<BooksPage> {
                 style: const ButtonStyle(
                     backgroundColor:
                         MaterialStatePropertyAll<Color>(Colors.red))),
-          )
+          ),
         ]),
+        floatingActionButton: FloatingActionButton(
+            onPressed: () => context.read<BooksModel>().refresh(context),
+            child: const Icon(Icons.refresh)),
         body: Container(
           width: MediaQuery.of(context).size.width,
-          child: _booksView(),
+          child: Consumer<BooksModel>(
+            builder: _booksView,
+          ),
         ));
   }
 }

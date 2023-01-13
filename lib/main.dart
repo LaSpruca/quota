@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:quota/pages/add_quote_page.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/pages/books_page.dart';
@@ -8,6 +9,7 @@ import 'package:quota/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quota/pages/login_page.dart';
 import 'package:quota/pages/splash_page.dart';
+import 'books_model.dart';
 
 Future<void> main() async {
   await Supabase.initialize(
@@ -16,10 +18,15 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1ZWhkcnBjanV1b3BmaWx4eWd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2Njk2MTE4MDMsImV4cCI6MTk4NTE4NzgwM30.S7EEHtjIm0lThHfVP4D8NEDGXMSrJx631p32jtnn8x4',
   );
-  runApp(MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => BooksModel(),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

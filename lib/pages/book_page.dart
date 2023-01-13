@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:quota/contants.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/supabase.dart';
@@ -30,6 +27,9 @@ class _BookPageState extends State<BookPage> {
       });
 
       var quotes = await widget.book.quotes();
+      quotes.sort(
+        (a, b) => b.date.compareTo(a.date),
+      );
 
       setState(() {
         this.quotes = quotes;
@@ -127,11 +127,13 @@ class _BookPageState extends State<BookPage> {
         },
       ),
       body: _loading
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [CircularProgressIndicator(), Text("Loading")],
-            )
+          ? SizedBox(
+              width: MediaQuery.of(context).size.width,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [CircularProgressIndicator(), Text("Loading")],
+              ))
           : SingleChildScrollView(
               child: Padding(
                   padding: const EdgeInsets.fromLTRB(15, 10, 15, 20),

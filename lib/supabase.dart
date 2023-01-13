@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quota/contants.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 part 'supabase.g.dart';
 
@@ -39,8 +40,11 @@ class NewBook {
   NewBook({required this.name});
 
   Future<Book> create() async {
-    return Book.fromSupabase(
-        await supabase.from("books").insert({name: name}).select('*').single());
+    return Book.fromSupabase(await supabase
+        .from("books")
+        .insert({"book_name": name})
+        .select('*')
+        .single());
   }
 }
 
@@ -95,14 +99,44 @@ class Book {
     return quotes;
   }
 
+  Future<List<Member>> getMembers() async => (await supabase
+          .from("user_connections")
+          .select<List<Map<String, dynamic>>>("profiles:user (*)")
+          .eq("book", id))
+      .map((entry) => Member.fromSupabase(entry["profiles"]))
+      .toList();
+
+  Future<void> addMember(String email) async {
+    // Check to make sure we aren't double inserting
+    if ((await getMembers()).any((element) => element.email == email)) {
+      return;
+    }
+
+    final Map<String, dynamic> user = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+    await supabase
+        .from("user_connections")
+        .insert({"user": user["id"], "book": id});
+  }
+
+  Future<Book> updateName(String name) async => Book.fromSupabase(await supabase
+      .from("books")
+      .update({"book_name": name})
+      .eq("id", id)
+      .select("*")
+      .single());
+
+  Future<void> remove() async {
+    await supabase.from("user_connections").delete().eq("book", id);
+    await supabase.from("books").delete().eq("id", id);
+  }
+
   factory Book.fromJson(Map<String, dynamic> json) => _$BookFromJson(json);
-
   Map<String, dynamic> toJson() => _$BookToJson(this);
-
-  Future<dynamic> getMembers() async => await supabase
-      .from("user_connections")
-      .select<List<Map<String, dynamic>>>("user, profiles:user (*)")
-      .eq("book", id);
 }
 
 class Member {
@@ -110,6 +144,15 @@ class Member {
   final String id;
 
   Member({required this.email, required this.id});
+  factory Member.fromSupabase(Map<String, dynamic> entry) =>
+      Member(email: entry["email"], id: entry["id"]);
+
+  Future<void> removeFrom(Book book) async {
+    await supabase
+        .from("user_connections")
+        .delete()
+        .match({"book": book.id, "user": id});
+  }
 }
 
 @JsonSerializable()
