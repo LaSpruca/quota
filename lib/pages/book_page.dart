@@ -134,43 +134,43 @@ class _BookPageState extends State<BookPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [CircularProgressIndicator(), Text("Loading")],
               ))
-          : SingleChildScrollView(
-              child: Padding(
-                  padding: const EdgeInsets.fromLTRB(15, 10, 15, 20),
-                  child: Column(
-                    children: quotes
-                        .map((quote) => SizedBox(
-                            width: MediaQuery.of(context).size.width,
-                            child: Card(
-                                child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(children: [
-                                Text(quote.quote,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15.0)),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                RichText(
-                                    text: TextSpan(children: [
-                                  TextSpan(
-                                      text: quote.person,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  TextSpan(
-                                      text:
-                                          " - ${quote.date.day}/${quote.date.month}/${quote.date.year}")
-                                ], style: const TextStyle(fontSize: 12.0))),
-                                _isOwner
-                                    ? ElevatedButton(
-                                        onPressed:
-                                            _showConfirmDeleteDialogue(quote),
-                                        child: const Text("Remove"))
-                                    : Container()
-                              ]),
-                            ))))
-                        .toList(),
-                  ))));
+          : Padding(
+              padding: const EdgeInsets.all(15),
+              child: ListView.builder(
+                itemBuilder: _quoteWidget,
+                itemCount: quotes.length,
+              )));
+
+  Widget _quoteWidget(BuildContext context, int i) {
+    final quote = quotes[i];
+    return SizedBox(
+        width: MediaQuery.of(context).size.width,
+        child: Card(
+            child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(children: [
+            Text(quote.quote,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 15.0)),
+            const SizedBox(
+              height: 10,
+            ),
+            RichText(
+                text: TextSpan(children: [
+              TextSpan(
+                  text: quote.person,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              TextSpan(
+                  text:
+                      " - ${quote.date.day}/${quote.date.month}/${quote.date.year}")
+            ], style: const TextStyle(fontSize: 12.0))),
+            _isOwner
+                ? ElevatedButton(
+                    onPressed: _showConfirmDeleteDialogue(quote),
+                    child: const Text("Remove"))
+                : Container()
+          ]),
+        )));
+  }
 }
