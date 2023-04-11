@@ -21,6 +21,7 @@ class _BooksPageState extends State<BooksPage> {
   late TextEditingController _bookNameController;
 
   Future<void> _signOut() async {
+    context.read<BooksModel>().clear();
     try {
       await supabase.auth.signOut();
     } on AuthException catch (error) {

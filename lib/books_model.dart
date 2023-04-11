@@ -33,4 +33,8 @@ class BooksModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  void clear() {
+    _books = [];
+  }
 }
