@@ -24,22 +24,29 @@ class _BookPageState extends State<BookPage> {
   late final TextEditingController _searchText;
   // late Book book;
 
-  Future<void> _getQuotes() async {
+  Future<void> _getQuotes([bool refresh = false]) async {
     try {
-      setState(() {
-        _isOwner = (supabase.auth.currentSession != null)
-            ? supabase.auth.currentSession!.user.id == widget.book.owner
-            : false;
-        _loading = true;
-      });
+      if (!refresh) {
+        setState(() {
+          _isOwner = (supabase.auth.currentSession != null)
+              ? supabase.auth.currentSession!.user.id == widget.book.owner
+              : false;
+          _loading = true;
+        });
+      }
 
-      var quotes = await widget.book.quotes();
+      var quotes = refresh
+          ? await widget.book.fetchQuotes()
+          : await widget.book.quotes();
       quotes.sort(
         (a, b) => b.date.compareTo(a.date),
       );
 
       setState(() {
         _quotes = quotes;
+        _filteredQuotes = quotes;
+        _search = false;
+        _searchText.clear();
         _fuzzyQuotes = TextSearch(quotes
             .map((quote) => TextSearchItem(quote, [quote.quote, quote.person]))
             .toList());
@@ -187,12 +194,14 @@ class _BookPageState extends State<BookPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [CircularProgressIndicator(), Text("Loading")],
               ))
-          : Padding(
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: ListView.builder(
-                itemBuilder: _quoteWidget,
-                itemCount: _filteredQuotes.length,
-              )));
+          : RefreshIndicator(
+              onRefresh: () => _getQuotes(true),
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                  child: ListView.builder(
+                    itemBuilder: _quoteWidget,
+                    itemCount: _filteredQuotes.length,
+                  ))));
 
   Widget _quoteWidget(BuildContext context, int i) {
     final quote = _filteredQuotes[i];

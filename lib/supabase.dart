@@ -75,10 +75,10 @@ class Book {
       return cachedItem.quotes;
     }
 
-    return await _fetchQuotes();
+    return await fetchQuotes();
   }
 
-  Future<List<Quote>> _fetchQuotes() async {
+  Future<List<Quote>> fetchQuotes() async {
     var quotes = (await supabase
             .from("quotes")
             .select<List<Map<String, dynamic>>>()
