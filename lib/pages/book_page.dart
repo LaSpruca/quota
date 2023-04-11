@@ -3,7 +3,7 @@ import 'package:quota/contants.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/supabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:text_search/text_search.dart';
+import 'package:fuzzysearch/fuzzysearch.dart';
 
 class BookPage extends StatefulWidget {
   final Book book;
@@ -16,7 +16,6 @@ class BookPage extends StatefulWidget {
 class _BookPageState extends State<BookPage> {
   List<Quote> _quotes = [];
   List<Quote> _filteredQuotes = [];
-  late TextSearch<Quote> _fuzzyQuotes;
 
   bool _loading = false;
   bool _isOwner = false;
@@ -47,9 +46,6 @@ class _BookPageState extends State<BookPage> {
         _filteredQuotes = quotes;
         _search = false;
         _searchText.clear();
-        _fuzzyQuotes = TextSearch(quotes
-            .map((quote) => TextSearchItem(quote, [quote.quote, quote.person]))
-            .toList());
       });
     } catch (ex) {
       print(ex);
@@ -115,11 +111,27 @@ class _BookPageState extends State<BookPage> {
     };
   }
 
-  void _filterQuotes() {
-    final filteredQuotes = _fuzzyQuotes.fastSearch(_searchText.text);
+  Future<void> _filterQuotes() async {
+    final sim = Fuzzy.withIdentifiers(
+        Map.fromEntries(_quotes.map(
+          (e) => MapEntry("${e.quote}|${e.person}", e),
+        )),
+        options: FuzzyOptions(
+            tokenize: true,
+            threshold: 0.3,
+            findAllMatches: true,
+            keys: [
+              WeightedKey(
+                  name: "quote", getter: (s) => s.split("|")[0], weight: 1.0),
+              WeightedKey(
+                  name: "person", getter: (s) => s.split("|")[1], weight: 1.0)
+            ]));
+
+    final matches = await sim.search(_searchText.text);
+    print(matches);
 
     setState(() {
-      _filteredQuotes = filteredQuotes;
+      _filteredQuotes = matches.map((e) => e.identifier!).toList();
     });
   }
 
@@ -138,7 +150,9 @@ class _BookPageState extends State<BookPage> {
                     if (_searchText.text != "") {
                       _filterQuotes();
                     } else {
-                      _filteredQuotes = _quotes;
+                      setState(() {
+                        _filteredQuotes = _quotes;
+                      });
                     }
                   },
                 ))

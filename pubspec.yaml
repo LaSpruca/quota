@@ -39,7 +39,7 @@ dependencies:
   json_annotation: ^4.7.0
   build_runner: ^2.3.2
   provider: ^6.0.5
-  text_search: ^0.0.2
+  fuzzysearch: ^0.1.3
 
 dev_dependencies:
   flutter_test:
