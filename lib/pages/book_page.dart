@@ -135,7 +135,7 @@ class _BookPageState extends State<BookPage> {
                 children: const [CircularProgressIndicator(), Text("Loading")],
               ))
           : Padding(
-              padding: const EdgeInsets.all(15),
+              padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: ListView.builder(
                 itemBuilder: _quoteWidget,
                 itemCount: quotes.length,
