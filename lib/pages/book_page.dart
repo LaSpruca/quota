@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:quota/contants.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/supabase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:text_search/text_search.dart';
 
 class BookPage extends StatefulWidget {
   final Book book;
@@ -12,9 +14,14 @@ class BookPage extends StatefulWidget {
 }
 
 class _BookPageState extends State<BookPage> {
-  List<Quote> quotes = [];
+  List<Quote> _quotes = [];
+  List<Quote> _filteredQuotes = [];
+  late TextSearch<Quote> _fuzzyQuotes;
+
   bool _loading = false;
   bool _isOwner = false;
+  bool _search = false;
+  late final TextEditingController _searchText;
   // late Book book;
 
   Future<void> _getQuotes() async {
@@ -32,7 +39,10 @@ class _BookPageState extends State<BookPage> {
       );
 
       setState(() {
-        this.quotes = quotes;
+        _quotes = quotes;
+        _fuzzyQuotes = TextSearch(quotes
+            .map((quote) => TextSearchItem(quote, [quote.quote, quote.person]))
+            .toList());
       });
     } catch (ex) {
       print(ex);
@@ -50,6 +60,13 @@ class _BookPageState extends State<BookPage> {
   void initState() {
     super.initState();
     _getQuotes();
+    _searchText = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchText.dispose();
+    super.dispose();
   }
 
   Future<void> Function() _showConfirmDeleteDialogue(Quote quote) {
@@ -91,15 +108,51 @@ class _BookPageState extends State<BookPage> {
     };
   }
 
+  void _filterQuotes() {
+    final filteredQuotes = _fuzzyQuotes.fastSearch(_searchText.text);
+
+    setState(() {
+      _filteredQuotes = filteredQuotes;
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
       appBar: AppBar(
         title: Text(widget.book.name),
+        bottom: _search
+            ? PreferredSize(
+                preferredSize: const Size(double.infinity, 45),
+                child: TextField(
+                  controller: _searchText,
+                  decoration: const InputDecoration(
+                      hintText: "Search", icon: Icon(Icons.search)),
+                  onChanged: (_) {
+                    if (_searchText.text != "") {
+                      _filterQuotes();
+                    } else {
+                      _filteredQuotes = _quotes;
+                    }
+                  },
+                ))
+            : null,
         actions: () {
           List<Widget> children = [
             IconButton(
               icon: const Icon(Icons.search),
-              onPressed: () {},
+              onPressed: () {
+                if (_search) {
+                  setState(() {
+                    _search = false;
+                    _filteredQuotes = _quotes;
+                    _searchText.clear();
+                  });
+                } else {
+                  setState(() {
+                    _search = true;
+                  });
+                }
+              },
             )
           ];
 
@@ -138,11 +191,11 @@ class _BookPageState extends State<BookPage> {
               padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
               child: ListView.builder(
                 itemBuilder: _quoteWidget,
-                itemCount: quotes.length,
+                itemCount: _filteredQuotes.length,
               )));
 
   Widget _quoteWidget(BuildContext context, int i) {
-    final quote = quotes[i];
+    final quote = _filteredQuotes[i];
     return SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Card(

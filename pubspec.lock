@@ -233,6 +233,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.4"
+  edit_distance:
+    dependency: transitive
+    description:
+      name: edit_distance
+      sha256: "5d5df1095679537a012cd94750075db87fc5630b7703d25e92302b18dc76eb71"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.0-nullsafety.0"
   fake_async:
     dependency: transitive
     description:
@@ -312,14 +320,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  fuzzy:
-    dependency: "direct main"
-    description:
-      name: fuzzy
-      sha256: c3713b11fc911b799bd91684b665c8600971d5f68abee48ba86a1472484c5402
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.0"
   glob:
     dependency: transitive
     description:
@@ -432,14 +432,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.1"
-  latinize:
-    dependency: transitive
-    description:
-      name: latinize
-      sha256: fb79b1c96dad9641725c7c6044f8d7df61911bb8e3072c6f6792afa3c1cae069
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   lints:
     dependency: transitive
     description:
@@ -789,6 +781,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.16"
+  text_search:
+    dependency: "direct main"
+    description:
+      name: text_search
+      sha256: "6907c77a81ddbcc85d306a7a6cf69a3315fc28ec02618fa3364bdc054af52e0b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   timing:
     dependency: transitive
     description:
@@ -797,6 +797,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  tuple:
+    dependency: transitive
+    description:
+      name: tuple
+      sha256: "0ea99cd2f9352b2586583ab2ce6489d1f95a5f6de6fb9492faaf97ae2060f0aa"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   typed_data:
     dependency: transitive
     description:
