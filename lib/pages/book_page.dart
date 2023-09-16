@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quota/contants.dart';
 import 'package:quota/pages/book_args_widget.dart';
 import 'package:quota/supabase.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fuzzysearch/fuzzysearch.dart';
+import 'package:fuzzywuzzy/fuzzywuzzy.dart';
 
 class BookPage extends StatefulWidget {
   final Book book;
@@ -112,26 +111,14 @@ class _BookPageState extends State<BookPage> {
   }
 
   Future<void> _filterQuotes() async {
-    final sim = Fuzzy.withIdentifiers(
-        Map.fromEntries(_quotes.map(
-          (e) => MapEntry("${e.quote}|${e.person}", e),
-        )),
-        options: FuzzyOptions(
-            tokenize: true,
-            threshold: 0.3,
-            findAllMatches: true,
-            keys: [
-              WeightedKey(
-                  name: "quote", getter: (s) => s.split("|")[0], weight: 1.0),
-              WeightedKey(
-                  name: "person", getter: (s) => s.split("|")[1], weight: 1.0)
-            ]));
-
-    final matches = await sim.search(_searchText.text);
-    print(matches);
+    final matches = extractAllSorted<Quote>(
+        query: _searchText.text,
+        choices: _quotes,
+        getter: (e) => "${e.person} ${e.quote}",
+        cutoff: 65);
 
     setState(() {
-      _filteredQuotes = matches.map((e) => e.identifier!).toList();
+      _filteredQuotes = matches.map((e) => e.choice).toList();
     });
   }
 
@@ -203,10 +190,10 @@ class _BookPageState extends State<BookPage> {
       body: _loading
           ? SizedBox(
               width: MediaQuery.of(context).size.width,
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [CircularProgressIndicator(), Text("Loading")],
+                children: [CircularProgressIndicator(), Text("Loading")],
               ))
           : RefreshIndicator(
               onRefresh: () => _getQuotes(true),
