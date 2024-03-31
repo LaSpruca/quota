@@ -1,11 +1,12 @@
 import BookView from "$lib/components/BookView";
 import HR from "$lib/components/HR";
+import LoadingView from "$lib/components/LoadingView";
 import { getBooksWithOwnerProfile, useSession } from "$lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import {
   Text,
   View,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   RefreshControl,
@@ -28,35 +29,46 @@ export default function Index() {
     },
   });
 
+  const myBooks = useMemo(
+    () =>
+      books
+        ? books
+            .filter(({ owner }) => owner === session.user.id)
+            .map(
+              ({ book_name: bookName, id, owner_email: { email, name } }) => (
+                <BookView
+                  key={id}
+                  bookName={bookName}
+                  author={name ?? email ?? ""}
+                  id={id}
+                />
+              ),
+            )
+        : [],
+    [books],
+  );
+
+  const othersBooks = useMemo(
+    () =>
+      books
+        ? books
+            .filter(({ owner }) => owner !== session.user.id)
+            .map(
+              ({ book_name: bookName, id, owner_email: { email, name } }) => (
+                <BookView
+                  key={id}
+                  bookName={bookName}
+                  author={name ?? email ?? ""}
+                  id={id}
+                />
+              ),
+            )
+        : [],
+    [books],
+  );
   if (isLoading) {
-    return (
-      <View style={stylesheet.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <LoadingView />;
   }
-
-  const myBooks = books
-    .filter(({ owner }) => owner === session.user.id)
-    .map(({ book_name: bookName, id, owner_email: { email, name } }) => (
-      <BookView
-        key={id}
-        bookName={bookName}
-        author={name ?? email ?? ""}
-        id={id}
-      />
-    ));
-
-  const othersBooks = books
-    .filter(({ owner }) => owner !== session.user.id)
-    .map(({ book_name: bookName, id, owner_email: { email, name } }) => (
-      <BookView
-        key={id}
-        bookName={bookName}
-        author={name ?? email ?? ""}
-        id={id}
-      />
-    ));
 
   return (
     <ScrollView>
@@ -82,14 +94,13 @@ export default function Index() {
 }
 
 const stylesheet = StyleSheet.create({
-  loadingContainer: { flex: 1, alignItems: "center", justifyContent: "center" },
   booksContainer: {
     padding: 10,
+    gap: 15,
     display: "flex",
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 15,
+    justifyContent: "space-evenly",
   },
   title: {
     fontSize: 30,

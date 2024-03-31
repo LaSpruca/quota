@@ -1,6 +1,5 @@
 import { supabase } from "./setup";
-
-const booksTable = supabase.from("books");
+import { Book } from "./types";
 
 export async function getBooksWithOwnerProfile(): Promise<
   {
@@ -11,7 +10,7 @@ export async function getBooksWithOwnerProfile(): Promise<
   }[]
 > {
   try {
-    const { error, data } = await booksTable.select(`
+    const { error, data } = await supabase.from("books").select(`
         id,
         book_name,
         owner,
@@ -28,5 +27,25 @@ export async function getBooksWithOwnerProfile(): Promise<
   } catch (ex) {
     console.error(ex);
     return [];
+  }
+}
+
+export async function getBook(bookId: string): Promise<Book | null> {
+  try {
+    const { error, data: maybeBook } = await supabase
+      .from("books")
+      .select("*")
+      .eq("id", bookId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      return null;
+    }
+
+    return maybeBook;
+  } catch (ex) {
+    console.error(ex);
+    return null;
   }
 }
