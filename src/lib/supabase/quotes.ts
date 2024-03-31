@@ -5,6 +5,7 @@ const quotesTable = supabase.from("quotes");
 
 export async function getQuotesFromBook(bookId: string): Promise<Quote[]> {
   try {
+    console.log("Getting books");
     const { error, data } = await quotesTable
       .select()
       .eq("book", bookId)
@@ -15,6 +16,8 @@ export async function getQuotesFromBook(bookId: string): Promise<Quote[]> {
       return [];
     }
 
+    console.log(data);
+    console.log(bookId);
     return data ?? [];
   } catch (ex) {
     console.error(ex);

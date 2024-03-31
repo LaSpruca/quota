@@ -31,6 +31,15 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ec78d494-3c42-440f-ae15-831d3bf179af"
+      }
+    },
+    "owner": "laspruca"
   }
 }

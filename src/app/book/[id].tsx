@@ -32,7 +32,7 @@ export default function BookView() {
     isRefetching: bookRefetching,
     refetch: refetchBook,
   } = useQuery({
-    queryKey: ["get-book", "book-" + id],
+    queryKey: ["get-book", id],
     queryFn: async () => await getBook(id),
   });
 
@@ -42,7 +42,7 @@ export default function BookView() {
     isRefetching: quotesRefetching,
     refetch: refetchQuotes,
   } = useQuery({
-    queryKey: ["get-quotes", "book-" + id],
+    queryKey: ["get-quotes", id],
     queryFn: async () => await getQuotesFromBook(id),
   });
 
