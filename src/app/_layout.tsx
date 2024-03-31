@@ -3,6 +3,7 @@ import { SessionContext, supabase } from "$lib/supabase";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,6 +40,16 @@ export default function Layout() {
     };
   }, []);
 
+  const indexHeaderRight = () => (
+    <FontAwesome.Button
+      name="user"
+      onPress={() => router.push("profile")}
+      borderRadius={100}
+    >
+      Profile
+    </FontAwesome.Button>
+  );
+
   return (
     <SessionContext.Provider value={session}>
       <QueryClientProvider client={client}>
@@ -47,6 +58,7 @@ export default function Layout() {
             name="index"
             options={{
               title: "All books",
+              headerRight: indexHeaderRight,
             }}
           />
           <Stack.Screen name="login" options={{ title: "Quota login" }} />
