@@ -1,12 +1,11 @@
 import { supabase } from "./setup";
 import { Quote } from "./types";
 
-const quotesTable = supabase.from("quotes");
-
 export async function getQuotesFromBook(bookId: string): Promise<Quote[]> {
   try {
-    console.log("Getting books");
-    const { error, data } = await quotesTable
+    console.log("Getting quotes");
+    const { error, data, count } = await supabase
+      .from("quotes")
       .select()
       .eq("book", bookId)
       .order("date", { ascending: false });
@@ -16,8 +15,7 @@ export async function getQuotesFromBook(bookId: string): Promise<Quote[]> {
       return [];
     }
 
-    console.log(data);
-    console.log(bookId);
+    console.log(`'${bookId}': ${count}`, data);
     return data ?? [];
   } catch (ex) {
     console.error(ex);
