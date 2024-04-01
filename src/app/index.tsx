@@ -3,7 +3,7 @@ import HR from "$lib/components/HR";
 import LoadingView from "$lib/components/LoadingView";
 import { getBooksWithOwnerProfile, useSession } from "$lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Text,
   View,
@@ -19,7 +19,6 @@ export default function Index() {
   const {
     isLoading,
     data: books,
-    refetch,
     isRefetching,
   } = useQuery({
     queryKey: ["get-books"],
@@ -76,7 +75,6 @@ export default function Index() {
         refreshing={isRefetching}
         onRefresh={() => {
           queryClient.invalidateQueries({ queryKey: ["get-books"] });
-          refetch();
         }}
       >
         <Text style={[stylesheet.title]}>My Books</Text>

@@ -1,17 +1,16 @@
 import LoadingView from "$lib/components/LoadingView";
-import { Profile as ProfileType, getProfile, useSession } from "$lib/supabase";
-import { FontAwesome } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
-import { Link, Stack } from "expo-router";
-import { useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Modal,
-  TextInput,
-  Pressable,
-} from "react-native";
+  Profile as ProfileType,
+  getProfile,
+  updateName,
+  useSession,
+} from "$lib/supabase";
+import { FontAwesome } from "@expo/vector-icons";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Alert } from "react-native";
+import { Button, Input, Overlay } from "react-native-elements";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SetNameModal = {
@@ -28,33 +27,24 @@ function SetNameModal({
 }: SetNameModal) {
   const [name, setName] = useState(originalName);
   return (
-    <Modal
-      visible={modalVisible}
+    <Overlay
+      isVisible={modalVisible}
       onRequestClose={onClose}
-      animationType="fade"
-      transparent
+      onBackdropPress={onClose}
     >
-      <View style={[stylesheet.modalCenterer]}>
-        <View style={[stylesheet.modalContainer]}>
-          <View>
-            <Text>New name</Text>
-            <TextInput
-              onChangeText={(event) => {
-                setName(event);
-              }}
-            />
-          </View>
-          <View>
-            <Pressable onPress={onClose}>
-              <Text>Close</Text>
-            </Pressable>
-            <Pressable onPress={() => onSubmit(name)}>
-              <Text>Submut</Text>
-            </Pressable>
-          </View>
+      <View style={[stylesheet.setNameModal]}>
+        <Input
+          label="New name"
+          value={name}
+          style={[stylesheet.setNameInput]}
+          onChangeText={(newName) => setName(newName)}
+        />
+        <View style={[stylesheet.setNameButtons]}>
+          <Button type="clear" title="Ok" onPress={() => onSubmit(name)} />
+          <Button type="solid" title="Cancel" onPress={onClose} />
         </View>
       </View>
-    </Modal>
+    </Overlay>
   );
 }
 
@@ -64,7 +54,30 @@ type ProfileInnerProps = {
 };
 
 function ProfileInner({ loading, profile }: ProfileInnerProps) {
+  const queryClient = useQueryClient();
   const [modalVisible, setModalVisible] = useState(false);
+
+  const updateNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const result = await updateName(profile.id, newName);
+      setModalVisible(false);
+      return result;
+    },
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({
+          predicate: ({ queryKey: [element] }) => {
+            return (
+              element === "get-book" ||
+              element === "get-books" ||
+              element === "get-profile"
+            );
+          },
+        });
+      }
+    },
+  });
+
   if (loading) {
     return <LoadingView />;
   }
@@ -80,23 +93,25 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
 
   return (
     <View style={[stylesheet.profileContainer]}>
+      <Text style={[stylesheet.displayNameText]}>Display name</Text>
       <View style={[stylesheet.usernameTextWrapper]}>
-        <Text style={[stylesheet.usernameText]}>
-          {profile.name ?? "name not set"}
-        </Text>
-        <FontAwesome.Button
-          name="pencil"
-          backgroundColor="#00000000"
-          color="#000000aa"
+        <Button
+          icon={<FontAwesome name="pencil" size={15} />}
+          type="clear"
           onPress={() => setModalVisible(true)}
         />
+        <Text style={[stylesheet.usernameText]}>
+          {profile.name ?? profile.email ?? ""}
+        </Text>
       </View>
       <Text style={[stylesheet.emailText]}>{profile.email}</Text>
       <SetNameModal
-        name={profile.name}
+        name={profile.name ?? profile.email ?? ""}
         onClose={() => setModalVisible(false)}
         modalVisible={modalVisible}
-        onSubmit={() => {}}
+        onSubmit={(newName) => {
+          updateNameMutation.mutate(newName);
+        }}
       />
     </View>
   );
@@ -105,8 +120,12 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
 export default function Profile() {
   const session = useSession();
 
-  const { isLoading, data: profile } = useQuery({
-    queryKey: ["profile"],
+  const {
+    isLoading,
+    data: profile,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["get-profile"],
     queryFn: async () => {
       return await getProfile(session.user.email!);
     },
@@ -115,7 +134,7 @@ export default function Profile() {
   return (
     <SafeAreaView>
       <Stack.Screen options={{ title: "Profile" }} />
-      <ProfileInner loading={isLoading} profile={profile} />
+      <ProfileInner loading={isLoading || isRefetching} profile={profile} />
     </SafeAreaView>
   );
 }
@@ -132,27 +151,37 @@ const stylesheet = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
+    gap: 10,
+    paddingBottom: 30,
   },
   usernameText: {
-    fontSize: 20,
+    fontSize: 35,
     fontWeight: "bold",
-    paddingBottom: 10,
   },
   emailText: {
     fontStyle: "italic",
     color: "#000000aa",
   },
-  modalCenterer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+
+  displayNameText: {
+    fontSize: 25,
+    fontWeight: "400",
   },
-  modalContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    shadowColor: "#000000",
-    elevation: 1,
-    padding: 50,
+
+  setNameModal: {
+    display: "flex",
+    minWidth: 200,
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+  },
+  setNameInput: {
+    width: "75%",
+  },
+  setNameButtons: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 20,
   },
 });
