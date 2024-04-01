@@ -2,8 +2,10 @@ import BookView from "$lib/components/BookView";
 import HR from "$lib/components/HR";
 import LoadingView from "$lib/components/LoadingView";
 import { getBooksWithOwnerProfile, useSession } from "$lib/supabase";
+import { Button } from "@rneui/themed";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { Link, Stack, useRouter } from "expo-router";
+import { useMemo } from "react";
 import {
   Text,
   View,
@@ -15,6 +17,7 @@ import {
 export default function Index() {
   const session = useSession()!;
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const {
     isLoading,
@@ -71,6 +74,20 @@ export default function Index() {
 
   return (
     <ScrollView>
+      <Stack.Screen
+        options={{
+          title: "All books",
+          headerRight: () => (
+            <Button
+              icon={{ name: "user", color: "white", size: 20 }}
+              onPress={() => router.push("/profile")}
+              title="Profile"
+              titleStyle={[{ paddingLeft: 5 }]}
+              raised
+            />
+          ),
+        }}
+      />
       <RefreshControl
         refreshing={isRefetching}
         onRefresh={() => {
