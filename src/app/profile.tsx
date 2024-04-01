@@ -11,7 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
-import { Button, Input, Overlay } from "react-native-elements";
+import { Button, Input, Overlay, Switch, useThemeMode } from "@rneui/themed";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type SetNameModal = {
@@ -56,7 +56,7 @@ type ProfileInnerProps = {
 
 function ProfileInner({ loading, profile }: ProfileInnerProps) {
   const queryClient = useQueryClient();
-  const session = useSession();
+  const themeMode = useThemeMode();
   const [modalVisible, setModalVisible] = useState(false);
 
   const updateNameMutation = useMutation({
@@ -107,6 +107,19 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
         </Text>
       </View>
       <Text style={[stylesheet.emailText]}>{profile.email}</Text>
+      <View style={[stylesheet.darkModeSwitch]}>
+        <Text>Dark theme</Text>
+        <Switch
+          value={themeMode.mode == "dark"}
+          onValueChange={(value) => {
+            if (!value) {
+              themeMode.setMode("light");
+            } else {
+              themeMode.setMode("dark");
+            }
+          }}
+        />
+      </View>
       <SetNameModal
         name={profile.name ?? profile.email ?? ""}
         onClose={() => setModalVisible(false)}
@@ -119,6 +132,7 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
         <Button title="Logout" onPress={() => supabase.auth.signOut()} />
         <Button
           title="Delete Account"
+          color="error"
           onPress={() =>
             Alert.alert(
               "Delete accont",
@@ -136,7 +150,6 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
               },
             )
           }
-          buttonStyle={[{ backgroundColor: "#B00002" }]}
         />
       </View>
     </View>
@@ -216,5 +229,13 @@ const stylesheet = StyleSheet.create({
     flexDirection: "row",
     paddingTop: 20,
     justifyContent: "space-evenly",
+  },
+
+  darkModeSwitch: {
+    display: "flex",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 15,
+    padding: 20,
   },
 });

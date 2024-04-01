@@ -1,12 +1,5 @@
 import type { Session } from "@supabase/supabase-js";
-import {
-  ReactNode,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { supabase } from "./setup";
+import { createContext, useContext } from "react";
 
 export const SessionContext = createContext<Session | null>(null);
 

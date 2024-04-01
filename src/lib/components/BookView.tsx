@@ -1,4 +1,3 @@
-import type { Book } from "$lib/supabase";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
@@ -17,7 +16,7 @@ export default function BookView(props: BookViewProps) {
       }
       onTouchEnd={() => setViewStyle([stylesheet.container])}
       onPress={() =>
-        router.push({ pathname: "book/[id]", params: { id: props.id } })
+        router.push({ pathname: "/book/[id]", params: { id: props.id } })
       }
     >
       <View style={viewStyle}>

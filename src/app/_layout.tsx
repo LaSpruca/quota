@@ -1,21 +1,36 @@
-import { SplashScreen, Stack, router, usePathname } from "expo-router";
+import { SplashScreen, Stack, router } from "expo-router";
 import { SessionContext, supabase } from "$lib/supabase";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Button } from "react-native-elements";
-import { FontAwesome } from "@expo/vector-icons";
+import { ThemeProvider, createTheme } from "@rneui/themed";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import "react-native-vector-icons/FontAwesome";
 
 SplashScreen.preventAutoHideAsync();
+
+const theme = createTheme({
+  components: {
+    FAB: (_props, theme) => {
+      return {
+        placement: "right",
+        icon: { type: "font-awesome", color: "white" },
+        color: theme.colors.primary,
+      };
+    },
+    Button: {
+      icon: { type: "font-awesome" },
+    },
+  },
+});
 
 export default function Layout() {
   const [client] = useState(new QueryClient());
   const [session, setSession] = useState(null);
-  const pathname = usePathname();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        router.replace("login");
+        router.replace("/login");
       }
       setSession(session);
       SplashScreen.hideAsync();
@@ -40,30 +55,15 @@ export default function Layout() {
     };
   }, []);
 
-  const indexHeaderRight = () => (
-    <Button
-      icon={<FontAwesome name="user" color="white" size={20} />}
-      onPress={() => router.push("profile")}
-      title="Profile"
-      titleStyle={[{ paddingLeft: 5 }]}
-      raised
-    />
-  );
-
   return (
-    <SessionContext.Provider value={session}>
-      <QueryClientProvider client={client}>
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{
-              title: "All books",
-              headerRight: indexHeaderRight,
-            }}
-          />
-          <Stack.Screen name="login" options={{ title: "Quota login" }} />
-        </Stack>
-      </QueryClientProvider>
-    </SessionContext.Provider>
+    <SafeAreaProvider>
+      <ThemeProvider theme={theme}>
+        <SessionContext.Provider value={session}>
+          <QueryClientProvider client={client}>
+            <Stack />
+          </QueryClientProvider>
+        </SessionContext.Provider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

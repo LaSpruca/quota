@@ -1,11 +1,12 @@
 import { Stack, useLocalSearchParams } from "expo-router";
-import { FlatList, StyleSheet, View } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Dimensions, FlatList, StyleSheet, View } from "react-native";
 import { getBook, getQuotesFromBook, useSession } from "$lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
-import { Button } from "react-native-elements";
+import { Button, FAB } from "@rneui/themed";
+import AddQuoteOverlay from "$lib/components/AddQuoteOverlay";
+import { useState } from "react";
 
 type HeaderButtonsProps = {
   isAdmin: boolean;
@@ -14,7 +15,13 @@ type HeaderButtonsProps = {
 function HeaderButtons({ isAdmin }: HeaderButtonsProps) {
   let button = <></>;
   if (isAdmin) {
-    button = <Button icon={<FontAwesome name="gear" color="white" size={20} />} />;
+    button = (
+      <Button
+        icon={{ name: "gear", color: "white" }}
+        title="Book Settings"
+        titleStyle={[{ paddingLeft: 5 }]}
+      />
+    );
   }
 
   return <View style={[stylesheet.headerButtonContainer]}>{button}</View>;
@@ -23,6 +30,7 @@ function HeaderButtons({ isAdmin }: HeaderButtonsProps) {
 export default function BookView() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
+  const [addQuoteVisible, setAddQuoteVisible] = useState(false);
 
   if (Array.isArray(id)) return <View />;
 
@@ -86,6 +94,12 @@ export default function BookView() {
         }}
         refreshing={quotesRefetching || bookRefetching}
       />
+      <FAB icon={{ name: "plus" }} onPress={() => setAddQuoteVisible(true)} />
+      <AddQuoteOverlay
+        visible={addQuoteVisible}
+        onDismis={() => setAddQuoteVisible(false)}
+        onSubmit={() => setAddQuoteVisible(false)}
+      />
     </View>
   );
 }
@@ -100,9 +114,10 @@ const stylesheet = StyleSheet.create({
   container: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     flexDirection: "column",
     gap: 10,
+    minHeight: Dimensions.get("window").height,
 
     padding: 10,
   },
