@@ -12,7 +12,7 @@ If you have any issues with your account, please reach out to Connor at [contact
 
 ## Information We Collect:
 
-We may collect the following types of personal information when you use [App Name]:
+We may collect the following types of personal information when you use Quota:
 
 Personal information you provide: When you create an account, we may collect your name and any other information you choose to provide.
 
