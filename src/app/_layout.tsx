@@ -8,7 +8,7 @@ import { FontAwesome } from "@expo/vector-icons";
 SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
-  const client = new QueryClient();
+  const [client] = useState(new QueryClient());
   const [session, setSession] = useState(null);
   const pathname = usePathname();
 

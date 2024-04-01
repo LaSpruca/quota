@@ -19,3 +19,22 @@ export async function getProfile(email: string) {
     return null;
   }
 }
+
+export async function updateName(id: string, name: string) {
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ name })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Cound not update profile", error);
+      return false;
+    }
+
+    return true;
+  } catch (ex) {
+    console.error("Could not update profile", ex);
+    return false;
+  }
+}

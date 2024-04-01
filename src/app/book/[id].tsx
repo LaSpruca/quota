@@ -30,7 +30,6 @@ export default function BookView() {
     isLoading: bookLoading,
     data: book,
     isRefetching: bookRefetching,
-    refetch: refetchBook,
   } = useQuery({
     queryKey: ["get-book", id],
     queryFn: async () => await getBook(id),
@@ -40,7 +39,6 @@ export default function BookView() {
     isLoading: quotesLoading,
     data: quotes,
     isRefetching: quotesRefetching,
-    refetch: refetchQuotes,
   } = useQuery({
     queryKey: ["get-quotes", id],
     queryFn: async () => await getQuotesFromBook(id),
@@ -68,8 +66,6 @@ export default function BookView() {
     );
   }
 
-  console.log("Rendering quotes", quotes);
-
   return (
     <View>
       <Stack.Screen
@@ -83,9 +79,9 @@ export default function BookView() {
         )}
         contentContainerStyle={[stylesheet.container]}
         onRefresh={() => {
-          queryClient.invalidateQueries({ queryKey: ["book-" + id] });
-          refetchBook();
-          refetchQuotes();
+          queryClient.invalidateQueries({
+            predicate: ({ queryKey: [_, queryId] }) => queryId === id,
+          });
         }}
         refreshing={quotesRefetching || bookRefetching}
       />
