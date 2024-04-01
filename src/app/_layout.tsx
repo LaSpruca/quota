@@ -2,7 +2,7 @@ import { SplashScreen, Stack, router, usePathname } from "expo-router";
 import { SessionContext, supabase } from "$lib/supabase";
 import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SafeAreaView } from "react-native";
+import { Button } from "react-native-elements";
 import { FontAwesome } from "@expo/vector-icons";
 
 SplashScreen.preventAutoHideAsync();
@@ -26,13 +26,13 @@ export default function Layout() {
         subscription: { unsubscribe },
       },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+
       if (!session) {
-        router.replace("login");
-      } else if (pathname === "/login") {
+        router.replace("/login");
+      } else {
         router.replace("/");
       }
-
-      setSession(session);
     });
 
     return () => {
@@ -41,13 +41,13 @@ export default function Layout() {
   }, []);
 
   const indexHeaderRight = () => (
-    <FontAwesome.Button
-      name="user"
+    <Button
+      icon={<FontAwesome name="user" color="white" size={20} />}
       onPress={() => router.push("profile")}
-      borderRadius={100}
-    >
-      Profile
-    </FontAwesome.Button>
+      title="Profile"
+      titleStyle={[{ paddingLeft: 5 }]}
+      raised
+    />
   );
 
   return (
