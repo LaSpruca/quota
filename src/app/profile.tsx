@@ -2,13 +2,14 @@ import LoadingView from "$lib/components/LoadingView";
 import {
   Profile as ProfileType,
   getProfile,
+  supabase,
   updateName,
   useSession,
 } from "$lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { Button, Input, Overlay } from "react-native-elements";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,6 +56,7 @@ type ProfileInnerProps = {
 
 function ProfileInner({ loading, profile }: ProfileInnerProps) {
   const queryClient = useQueryClient();
+  const session = useSession();
   const [modalVisible, setModalVisible] = useState(false);
 
   const updateNameMutation = useMutation({
@@ -113,6 +115,30 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
           updateNameMutation.mutate(newName);
         }}
       />
+      <View style={[stylesheet.ohOhButton]}>
+        <Button title="Logout" onPress={() => supabase.auth.signOut()} />
+        <Button
+          title="Delete Account"
+          onPress={() =>
+            Alert.alert(
+              "Delete accont",
+              "Deleting your account is permanant, and will delete any books that you own",
+              [
+                {
+                  text: "Ok",
+                  onPress: () => {
+                    supabase.rpc("delete_user");
+                  },
+                },
+              ],
+              {
+                cancelable: true,
+              },
+            )
+          }
+          buttonStyle={[{ backgroundColor: "#B00002" }]}
+        />
+      </View>
     </View>
   );
 }
@@ -183,5 +209,12 @@ const stylesheet = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
     gap: 20,
+  },
+  ohOhButton: {
+    display: "flex",
+    width: "100%",
+    flexDirection: "row",
+    paddingTop: 20,
+    justifyContent: "space-evenly",
   },
 });

@@ -5,6 +5,7 @@ import { getBook, getQuotesFromBook, useSession } from "$lib/supabase";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
+import { Button } from "react-native-elements";
 
 type HeaderButtonsProps = {
   isAdmin: boolean;
@@ -13,7 +14,7 @@ type HeaderButtonsProps = {
 function HeaderButtons({ isAdmin }: HeaderButtonsProps) {
   let button = <></>;
   if (isAdmin) {
-    button = <FontAwesome.Button borderRadius={100} name="gear" />;
+    button = <Button icon={<FontAwesome name="gear" color="white" size={20} />} />;
   }
 
   return <View style={[stylesheet.headerButtonContainer]}>{button}</View>;
