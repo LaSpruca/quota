@@ -1,10 +1,11 @@
 import BookView from "$lib/components/BookView";
 import HR from "$lib/components/HR";
 import LoadingView from "$lib/components/LoadingView";
-import { getBooksWithOwnerProfile, useSession } from "$lib/supabase";
+import { useBooks } from "$lib/queries";
+import { useSession } from "$lib/supabase";
 import { Button } from "@rneui/themed";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, Stack, useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Stack, useRouter } from "expo-router";
 import { useMemo } from "react";
 import {
   Text,
@@ -18,18 +19,7 @@ export default function Index() {
   const session = useSession()!;
   const queryClient = useQueryClient();
   const router = useRouter();
-
-  const {
-    isLoading,
-    data: books,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["get-books"],
-    enabled: true,
-    queryFn: async () => {
-      return getBooksWithOwnerProfile();
-    },
-  });
+  const { isLoading, data: books, isRefetching } = useBooks();
 
   const myBooks = useMemo(
     () =>

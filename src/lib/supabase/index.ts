@@ -4,3 +4,4 @@ export * from "./session";
 export * from "./books";
 export * from "./quotes";
 export * from "./profile";
+export * from "./userConnections";

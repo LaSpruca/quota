@@ -1,38 +1,57 @@
 import { SplashScreen, Stack, router } from "expo-router";
 import { SessionContext, supabase } from "$lib/supabase";
 import { useEffect, useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { ThemeProvider, createTheme } from "@rneui/themed";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "react-native-vector-icons/FontAwesome";
+import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { Session } from "@supabase/supabase-js";
 
 SplashScreen.preventAutoHideAsync();
 
 const theme = createTheme({
   components: {
-    FAB: (_props, theme) => {
+    FAB: (props, theme) => {
+      if (typeof props.icon === "object" && !props.icon.type) {
+        props.icon.type = "font-awesome";
+      }
+
       return {
         placement: "right",
-        icon: { type: "font-awesome", color: "white" },
         color: theme.colors.primary,
+        icon: props.icon,
       };
     },
-    Button: {
-      icon: { type: "font-awesome" },
+    Button: (props) => {
+      if (typeof props.icon === "object" && !props.icon.type) {
+        props.icon.type = "font-awesome";
+      }
+
+      return {
+        icon: props.icon,
+      };
     },
   },
 });
 
+const client = new QueryClient();
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: "rq-cache",
+});
+
 export default function Layout() {
-  const [client] = useState(new QueryClient());
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | Session>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
       if (!session) {
         router.replace("/login");
       }
-      setSession(session);
       SplashScreen.hideAsync();
     });
 
@@ -55,15 +74,24 @@ export default function Layout() {
     };
   }, []);
 
+  // The app does not propegate that the session has not been set if I don't do
+  // this, idk why ¯\_(ツ)_/¯
+  useEffect(() => {
+    session;
+  }, [session]);
+
   return (
-    <SafeAreaProvider>
-      <ThemeProvider theme={theme}>
-        <SessionContext.Provider value={session}>
-          <QueryClientProvider client={client}>
+    <PersistQueryClientProvider
+      client={client}
+      persistOptions={{ persister: asyncStoragePersister }}
+    >
+      <SessionContext.Provider value={session}>
+        <SafeAreaProvider>
+          <ThemeProvider theme={theme}>
             <Stack />
-          </QueryClientProvider>
-        </SessionContext.Provider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </SessionContext.Provider>
+    </PersistQueryClientProvider>
   );
 }

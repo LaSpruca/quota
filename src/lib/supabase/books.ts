@@ -1,5 +1,5 @@
 import { supabase } from "./setup";
-import { Book } from "./types";
+import { Book, Profile } from "./types";
 
 export async function getBooksWithOwnerProfile(): Promise<
   {
@@ -49,3 +49,4 @@ export async function getBook(bookId: string): Promise<Book | null> {
     return null;
   }
 }
+

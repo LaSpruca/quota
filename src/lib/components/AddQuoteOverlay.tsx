@@ -1,7 +1,7 @@
-import { Button, Input, Overlay } from "@rneui/themed";
+import { Button, Input, Overlay, Text, makeStyles } from "@rneui/themed";
 import { useState } from "react";
 import { View } from "react-native";
-import DatePicker from "react-native-date-picker";
+import DatePicker from "./DatePicker";
 
 type AddQuoteOverlayProps = {
   onSubmit: (quote: { quote: string; author: string; date: Date }) => void;
@@ -14,29 +14,41 @@ export default function AddQuoteOverlay({
   onDismis,
   visible,
 }: AddQuoteOverlayProps) {
+  const stylesheet = createStylesheet();
   const [date, setDate] = useState(new Date());
   const [quote, setQuote] = useState("");
   const [author, setAuthor] = useState("");
+  const [dateModalOpen, setDateModalOpen] = useState(false);
 
   return (
     <Overlay
       isVisible={visible}
       onDismiss={onDismis}
       onBackdropPress={onDismis}
+      animationType="fade"
     >
       <View>
         <Input label="Quote" value={quote} onChangeText={setQuote} />
         <Input label="Author" value={author} onChangeText={setAuthor} />
+        <View style={[stylesheet.dateContainer]}>
+          <Text style={[stylesheet.actualDateText]}>
+            <Text style={[stylesheet.dateText]}>Date: </Text>
+            {date.getDate()}/{date.getMonth()}/{date.getFullYear()}
+          </Text>
+          <Button title="Change" onPress={() => setDateModalOpen(true)} />
+        </View>
         <DatePicker
-          mode="date"
           date={date}
-          onDateChange={setDate}
-          maximumDate={new Date()}
+          onDateChange={(newDate) => {
+            setDate(newDate);
+            setDateModalOpen(false);
+          }}
+          visible={dateModalOpen}
         />
         <View>
-          <Button type="clear" title="Cancel" />
+          <Button type="clear" title="Cancel" onPress={() => onDismis()} />
           <Button
-            title="submit"
+            title="Submit"
             onPress={() => onSubmit({ quote, author, date })}
           />
         </View>
@@ -44,3 +56,20 @@ export default function AddQuoteOverlay({
     </Overlay>
   );
 }
+
+const createStylesheet = makeStyles(() => {
+  return {
+    dateText: {
+      fontWeight: "bold",
+    },
+
+    actualDateText: {},
+
+    dateContainer: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+  };
+});
