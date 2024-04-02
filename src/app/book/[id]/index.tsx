@@ -1,18 +1,20 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { Dimensions, FlatList, StyleSheet, View } from "react-native";
-import { getBook, getQuotesFromBook, useSession } from "$lib/supabase";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { insertQuote, useSession } from "$lib/supabase";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
 import { Button, FAB } from "@rneui/themed";
 import AddQuoteOverlay from "$lib/components/AddQuoteOverlay";
 import { useState } from "react";
+import { useBook, useQuotes } from "$lib/queries";
 
 type HeaderButtonsProps = {
   isAdmin: boolean;
+  id: string;
 };
 
-function HeaderButtons({ isAdmin }: HeaderButtonsProps) {
+function HeaderButtons({ isAdmin, id }: HeaderButtonsProps) {
   let button = <></>;
   if (isAdmin) {
     button = (
@@ -20,6 +22,9 @@ function HeaderButtons({ isAdmin }: HeaderButtonsProps) {
         icon={{ name: "gear", color: "white" }}
         title="Book Settings"
         titleStyle={[{ paddingLeft: 5 }]}
+        onPress={() =>
+          router.push({ pathname: "/book/[id]/settings", params: { id } })
+        }
       />
     );
   }
@@ -39,18 +44,23 @@ export default function BookView() {
     isLoading: bookLoading,
     data: book,
     isRefetching: bookRefetching,
-  } = useQuery({
-    queryKey: ["get-book", id],
-    queryFn: async () => await getBook(id),
-  });
+  } = useBook(id);
 
   const {
     isLoading: quotesLoading,
     data: quotes,
     isRefetching: quotesRefetching,
-  } = useQuery({
-    queryKey: ["get-quotes", id],
-    queryFn: async () => await getQuotesFromBook(id),
+  } = useQuotes(id);
+
+  const createQuote = useMutation({
+    mutationFn: async (data: Parameters<typeof insertQuote>[0]) => {
+      return await insertQuote(data);
+    },
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["get-quotes", id] });
+      }
+    },
   });
 
   if (bookLoading) {
@@ -62,7 +72,7 @@ export default function BookView() {
   }
 
   const headerRight = () => (
-    <HeaderButtons isAdmin={book.owner === session.user.id} />
+    <HeaderButtons isAdmin={book.owner === session.user.id} id={id} />
   );
 
   if (quotesLoading) {
@@ -98,7 +108,15 @@ export default function BookView() {
       <AddQuoteOverlay
         visible={addQuoteVisible}
         onDismis={() => setAddQuoteVisible(false)}
-        onSubmit={() => setAddQuoteVisible(false)}
+        onSubmit={({ date, quote, author }) => {
+          createQuote.mutate({
+            quote,
+            date: date.toISOString(),
+            book: id,
+            person: author,
+          });
+          setAddQuoteVisible(false);
+        }}
       />
     </View>
   );

@@ -1,18 +1,13 @@
 import LoadingView from "$lib/components/LoadingView";
-import {
-  Profile as ProfileType,
-  getProfile,
-  supabase,
-  updateName,
-  useSession,
-} from "$lib/supabase";
+import { Profile as ProfileType, supabase, updateName } from "$lib/supabase";
 import { FontAwesome } from "@expo/vector-icons";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { Button, Input, Overlay, Switch, useThemeMode } from "@rneui/themed";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useProfile } from "$lib/queries";
 
 type SetNameModal = {
   modalVisible: boolean;
@@ -157,19 +152,7 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
 }
 
 export default function Profile() {
-  const session = useSession();
-
-  const {
-    isLoading,
-    data: profile,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["get-profile"],
-    queryFn: async () => {
-      return await getProfile(session.user.email!);
-    },
-  });
-
+  const { isLoading, data: profile, isRefetching } = useProfile();
   return (
     <SafeAreaView>
       <Stack.Screen options={{ title: "Profile" }} />
