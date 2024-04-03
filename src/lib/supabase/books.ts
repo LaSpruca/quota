@@ -50,3 +50,24 @@ export async function getBook(bookId: string): Promise<Book | null> {
   }
 }
 
+export async function updateBookName(
+  bookId: string,
+  bookName: string,
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("books")
+      .update({ book_name: bookName })
+      .eq("id", bookId);
+
+    if (error) {
+      console.error("Could not rename book", error);
+      return false;
+    }
+
+    return true;
+  } catch (ex) {
+    console.error("Could not rename book", ex);
+    return false;
+  }
+}
