@@ -100,7 +100,13 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
         defaultText={profile.name ?? profile.email}
       />
       <View style={[stylesheet.ohOhButton]}>
-        <Button title="Logout" onPress={() => supabase.auth.signOut()} />
+        <Button
+          title="Logout"
+          onPress={() => {
+            queryClient.removeQueries({ predicate: () => true });
+            supabase.auth.signOut();
+          }}
+        />
         <Button
           title="Delete Account"
           color="error"
