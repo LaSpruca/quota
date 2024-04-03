@@ -23,7 +23,7 @@ const theme = createTheme({
   components: {
     FAB: (props, theme) => {
       if (typeof props.icon === "object" && !props.icon.type) {
-        props.icon.type = "font-awesome";
+        props.icon.type = "material";
       }
 
       return {
@@ -35,7 +35,7 @@ const theme = createTheme({
     Button: (props) => {
       if (typeof props.icon === "object") {
         if (!props.icon.type) {
-          props.icon.type = "font-awesome";
+          props.icon.type = "material";
         }
       }
 

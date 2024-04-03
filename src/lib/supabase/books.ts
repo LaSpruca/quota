@@ -71,3 +71,41 @@ export async function updateBookName(
     return false;
   }
 }
+
+export async function createBook(
+  bookName: string,
+  owner_id: string,
+  owner_email: string,
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from("books")
+      .insert({ book_name: bookName, owner: owner_id, owner_email });
+
+    if (error) {
+      console.error("Could not insert book", error);
+      return false;
+    }
+
+    return true;
+  } catch (ex) {
+    console.error("Could not insert book", ex);
+    return false;
+  }
+}
+
+export async function deleteBook(bookId: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("books").delete().eq("id", bookId);
+
+    if (error) {
+      console.error("Could not delete book", error);
+      return false;
+    }
+
+    return true;
+  } catch (ex) {
+    console.error("Could not delete book", ex);
+    return false;
+  }
+}

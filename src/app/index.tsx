@@ -1,12 +1,13 @@
 import BookView from "$lib/components/BookView";
 import HR from "$lib/components/HR";
 import LoadingView from "$lib/components/LoadingView";
+import TextInputOverlay from "$lib/components/Overlays/TextInputOverlay";
 import { useBooks } from "$lib/queries";
-import { useSession } from "$lib/supabase";
-import { Button, Text, makeStyles } from "@rneui/themed";
-import { useQueryClient } from "@tanstack/react-query";
+import { createBook, useSession } from "$lib/supabase";
+import { Button, FAB, Text, makeStyles } from "@rneui/themed";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { View, ScrollView, RefreshControl } from "react-native";
 
 export default function Index() {
@@ -15,6 +16,17 @@ export default function Index() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const { isLoading, data: books, isRefetching } = useBooks();
+  const [showNewBook, setShowNewBook] = useState(false);
+  const createBookMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      return await createBook(newName, session.user.id, session.user.email!);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ["get-books"] });
+      }
+    },
+  });
 
   const myBooks = useMemo(
     () =>
@@ -68,7 +80,7 @@ export default function Index() {
           title: "All books",
           headerRight: () => (
             <Button
-              icon={{ name: "user", color: "white", size: 20 }}
+              icon={{ name: "person", color: "white", size: 20 }}
               onPress={() => router.push("/profile")}
               title="Profile"
               titleStyle={[{ paddingLeft: 5 }]}
@@ -92,6 +104,21 @@ export default function Index() {
         </Text>
         <HR />
         <View style={[stylesheet.booksContainer]}>{othersBooks}</View>
+        <FAB
+          icon={{ name: "add", color: "white" }}
+          onPress={() => setShowNewBook(true)}
+        />
+        <TextInputOverlay
+          okText="Create"
+          visible={showNewBook}
+          inputMode="text"
+          label="New book name"
+          onSubmit={(name) => {
+            createBookMutation.mutate(name);
+            setShowNewBook(false);
+          }}
+          onDismis={() => setShowNewBook(false)}
+        />
       </RefreshControl>
     </ScrollView>
   );
