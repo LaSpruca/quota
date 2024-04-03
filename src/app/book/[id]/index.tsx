@@ -1,6 +1,12 @@
 import { Stack, router, useLocalSearchParams } from "expo-router";
 import { Dimensions, FlatList, StyleSheet, View } from "react-native";
-import { insertQuote, useSession } from "$lib/supabase";
+import {
+  Quote,
+  deleteQuote,
+  insertQuote,
+  updateQuote,
+  useSession,
+} from "$lib/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
@@ -36,6 +42,7 @@ export default function BookView() {
   const { id } = useLocalSearchParams();
   const queryClient = useQueryClient();
   const [addQuoteVisible, setAddQuoteVisible] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<null | Quote>(null);
 
   if (Array.isArray(id)) return <View />;
 
@@ -52,6 +59,29 @@ export default function BookView() {
     isRefetching: quotesRefetching,
   } = useQuotes(id);
 
+  const deleteQuoteMutation = useMutation({
+    mutationFn: async (quoteId: string) => {
+      return await deleteQuote(quoteId);
+    },
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["get-quotes", id] });
+      }
+    },
+  });
+  const updateQuoteMutation = useMutation({
+    mutationFn: async ([quoteId, data]: [
+      string,
+      Parameters<typeof updateQuote>[1],
+    ]) => {
+      return await updateQuote(quoteId, data);
+    },
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["get-quotes", id] });
+      }
+    },
+  });
   const createQuote = useMutation({
     mutationFn: async (data: Parameters<typeof insertQuote>[0]) => {
       return await insertQuote(data);
@@ -93,9 +123,23 @@ export default function BookView() {
       <FlatList
         data={quotes}
         keyExtractor={({ id }) => id}
-        renderItem={({ item: { quote, person, date } }) => (
-          <QuoteView quote={quote} author={person} date={new Date(date)} />
-        )}
+        renderItem={({ item }) => {
+          const { quote, person, date } = item;
+          if (book.owner === session.user.id) {
+            return (
+              <QuoteView
+                quote={quote}
+                author={person}
+                date={new Date(date)}
+                onHold={() => setEditingQuote(item)}
+              />
+            );
+          }
+
+          return (
+            <QuoteView quote={quote} author={person} date={new Date(date)} />
+          );
+        }}
         contentContainerStyle={[stylesheet.container]}
         onRefresh={() => {
           queryClient.invalidateQueries({
@@ -107,6 +151,34 @@ export default function BookView() {
       <FAB
         icon={{ name: "plus", color: "white" }}
         onPress={() => setAddQuoteVisible(true)}
+      />
+      <QuoteOptions
+        visible={editingQuote !== null}
+        onSubmit={({ quote, author, date }) => {
+          updateQuoteMutation.mutate([
+            editingQuote.id,
+            {
+              quote,
+              person: author,
+              date: date.toISOString(),
+            },
+          ]);
+          setEditingQuote(null);
+        }}
+        onDismis={() => setEditingQuote(null)}
+        onDelete={() => {
+          deleteQuoteMutation.mutate(editingQuote.id);
+          setEditingQuote(null);
+        }}
+        defaultVales={
+          editingQuote !== null
+            ? {
+                quote: editingQuote.quote,
+                author: editingQuote.person,
+                date: new Date(editingQuote.date),
+              }
+            : undefined
+        }
       />
       <QuoteOptions
         visible={addQuoteVisible}
