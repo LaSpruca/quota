@@ -1,8 +1,13 @@
 import LoadingView from "$lib/components/LoadingView";
 import TextInputOverlay from "$lib/components/Overlays/TextInputOverlay";
 import { useBook, useMembers } from "$lib/queries";
-import { Profile, addUserToBook, removeUser } from "$lib/supabase";
-import { Button, Text, makeStyles } from "@rneui/themed";
+import {
+  Profile,
+  addUserToBook,
+  removeUser,
+  updateBookName,
+} from "$lib/supabase";
+import { Button, Text, makeStyles, useTheme } from "@rneui/themed";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
@@ -119,12 +124,28 @@ export default function BookSettings() {
     return <></>;
   }
 
+  const queryClient = useQueryClient();
+  const [modalVisible, setModalVisible] = useState(false);
+  const { theme } = useTheme();
   const { isLoading: bookLoading, data: book } = useBook(id);
   const {
     isLoading: membersLoading,
     data: members,
     isRefetching: isMembersRefreshing,
   } = useMembers(id);
+  const updateBookNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      return await updateBookName(id, newName);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({
+          predicate: ({ queryKey: [first, second] }) =>
+            first === "get-books" || (first === "get-book" && second === id),
+        });
+      }
+    },
+  });
 
   if (bookLoading) {
     return (
@@ -137,6 +158,32 @@ export default function BookSettings() {
   return (
     <SafeAreaView>
       <Stack.Screen options={{ title: `${book.book_name} Settings` }} />
+      <View style={[stylesheet.membersList]}>
+        <Text h3 style={[{ textAlign: "center" }]}>
+          Display name
+        </Text>
+        <View style={[stylesheet.usernameTextWrapper]}>
+          <Button
+            icon={{ name: "pencil", size: 15, color: theme.colors.black }}
+            type="clear"
+            onPress={() => setModalVisible(true)}
+          />
+          <Text style={[stylesheet.usernameText]}>{book.book_name}</Text>
+        </View>
+      </View>
+      <TextInputOverlay
+        onDismis={() => {
+          setModalVisible(false);
+        }}
+        onSubmit={(text) => {
+          updateBookNameMutation.mutate(text);
+          setModalVisible(false);
+        }}
+        label={"Book name"}
+        inputMode={"text"}
+        defaultText={book.book_name}
+        visible={modalVisible}
+      />
       <MembersList
         id={id}
         isRefreshing={isMembersRefreshing}
@@ -159,6 +206,22 @@ const createStylesheet = makeStyles(() => {
       justifyContent: "space-between",
       flexDirection: "row",
       paddingBottom: 20,
+    },
+    usernameTextWrapper: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 10,
+      paddingBottom: 30,
+    },
+    usernameText: {
+      fontSize: 35,
+      fontWeight: "bold",
+    },
+    displayNameText: {
+      fontSize: 25,
+      fontWeight: "400",
     },
   };
 });
