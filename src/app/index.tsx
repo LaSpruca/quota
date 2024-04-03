@@ -7,7 +7,7 @@ import { Button, Text, makeStyles } from "@rneui/themed";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useMemo } from "react";
-import { View, ScrollView, StyleSheet, RefreshControl } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 
 export default function Index() {
   const stylesheet = createStylesheet();

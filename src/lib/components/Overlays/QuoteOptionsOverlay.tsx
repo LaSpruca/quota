@@ -1,12 +1,13 @@
 import { Button, Input, Overlay, Text, makeStyles } from "@rneui/themed";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import DatePicker from "../DatePicker";
 
 type DeleteButtonProps = {
   onDelete?: () => void;
+  stylesheet: ReturnType<typeof createStylesheet>;
 };
-function DeleteButton({ onDelete }: DeleteButtonProps) {
+function DeleteButton({ onDelete, stylesheet }: DeleteButtonProps) {
   if (!onDelete) {
     return <></>;
   }
@@ -15,7 +16,7 @@ function DeleteButton({ onDelete }: DeleteButtonProps) {
       color="error"
       title="Delete"
       onPress={onDelete}
-      icon={{ name: "trash" }}
+      icon={{ name: "trash", color: "white" }}
     />
   );
 }
@@ -25,6 +26,7 @@ type QuoteOptionsProps = {
   onDismis: () => void;
   visible: boolean;
   onDelete?: () => void;
+  defaultVales?: { quote: string; author: string; date: Date };
 };
 
 export default function QuoteOptionsOverlay({
@@ -32,12 +34,20 @@ export default function QuoteOptionsOverlay({
   onDismis: onDismisFn,
   visible,
   onDelete,
+  defaultVales,
 }: QuoteOptionsProps) {
   const stylesheet = createStylesheet();
   const [date, setDate] = useState(new Date());
   const [quote, setQuote] = useState("");
   const [author, setAuthor] = useState("");
   const [dateModalOpen, setDateModalOpen] = useState(false);
+
+  useEffect(() => {
+    setDate(defaultVales?.date ?? date);
+    setAuthor(defaultVales?.author ?? author);
+    setQuote(defaultVales?.quote ?? quote);
+  }, [defaultVales]);
+
   const reset = () => {
     setDate(new Date());
     setQuote("");
@@ -79,14 +89,14 @@ export default function QuoteOptionsOverlay({
           }}
           visible={dateModalOpen}
         />
-        <View>
-          <Button type="clear" title="Cancel" onPress={() => onDismis()} />
+        <View style={[stylesheet.buttonsContainer]}>
+          <DeleteButton onDelete={onDelete} stylesheet={stylesheet} />
           <Button
-            title="Submit"
+            title={onDelete ? "Add" : "Update"}
             onPress={() => onSubmit({ quote, author, date })}
           />
+          <Button type="clear" title="Cancel" onPress={() => onDismis()} />
         </View>
-        <DeleteButton onDelete={onDelete} />
       </View>
     </Overlay>
   );
@@ -105,6 +115,15 @@ const createStylesheet = makeStyles(() => {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+    },
+
+    buttonsContainer: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 10,
+      paddingTop: 10,
     },
   };
 });
