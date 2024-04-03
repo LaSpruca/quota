@@ -27,9 +27,9 @@ type QuoteOptionsProps = {
   onDelete?: () => void;
 };
 
-export default function AddQuoteOverlay({
-  onSubmit,
-  onDismis,
+export default function QuoteOptionsOverlay({
+  onSubmit: onSubmitFn,
+  onDismis: onDismisFn,
   visible,
   onDelete,
 }: QuoteOptionsProps) {
@@ -38,6 +38,21 @@ export default function AddQuoteOverlay({
   const [quote, setQuote] = useState("");
   const [author, setAuthor] = useState("");
   const [dateModalOpen, setDateModalOpen] = useState(false);
+  const reset = () => {
+    setDate(new Date());
+    setQuote("");
+    setAuthor("");
+    setDateModalOpen(false);
+  };
+  const onDismis = () => {
+    reset();
+    onDismisFn();
+  };
+
+  const onSubmit: QuoteOptionsProps["onSubmit"] = (args) => {
+    reset();
+    onSubmitFn(args);
+  };
 
   return (
     <Overlay

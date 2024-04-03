@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
 import { Button, FAB } from "@rneui/themed";
-import QuoteOptions from "$lib/components/Overlays/QuoteOptions";
+import QuoteOptions from "$lib/components/Overlays/QuoteOptionsOverlay";
 import { useState } from "react";
 import { useBook, useQuotes } from "$lib/queries";
 
