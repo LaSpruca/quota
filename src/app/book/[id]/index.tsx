@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
 import { Button, FAB } from "@rneui/themed";
-import AddQuoteOverlay from "$lib/components/AddQuoteOverlay";
+import QuoteOptions from "$lib/components/Overlays/QuoteOptions";
 import { useState } from "react";
 import { useBook, useQuotes } from "$lib/queries";
 
@@ -104,8 +104,11 @@ export default function BookView() {
         }}
         refreshing={quotesRefetching || bookRefetching}
       />
-      <FAB icon={{ name: "plus" }} onPress={() => setAddQuoteVisible(true)} />
-      <AddQuoteOverlay
+      <FAB
+        icon={{ name: "plus", color: "white" }}
+        onPress={() => setAddQuoteVisible(true)}
+      />
+      <QuoteOptions
         visible={addQuoteVisible}
         onDismis={() => setAddQuoteVisible(false)}
         onSubmit={({ date, quote, author }) => {
