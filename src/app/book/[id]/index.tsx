@@ -95,6 +95,19 @@ export default function BookView() {
     },
   });
 
+  const filteredQuotes = useMemo(
+    () =>
+      quotes
+        ? searchTerm !== ""
+          ? quotes.filter(
+              ({ quote, person }) =>
+                fuzzy(searchTerm, `${quote} ${person}`) > 0.75,
+            )
+          : quotes
+        : [],
+    [quotes, searchTerm],
+  );
+
   if (bookLoading) {
     return (
       <LoadingView>
@@ -116,17 +129,6 @@ export default function BookView() {
       </LoadingView>
     );
   }
-
-  const filteredQuotes = useMemo(
-    () =>
-      searchTerm !== ""
-        ? quotes.filter(
-            ({ quote, person }) =>
-              fuzzy(searchTerm, `${quote} ${person}`) > 0.75,
-          )
-        : quotes,
-    [quotes, searchTerm],
-  );
 
   return (
     <View>
