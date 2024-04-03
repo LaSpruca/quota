@@ -1,11 +1,12 @@
 import LoadingView from "$lib/components/LoadingView";
+import TextInputOverlay from "$lib/components/Overlays/TextInputOverlay";
 import { useBook, useMembers } from "$lib/queries";
-import { Profile } from "$lib/supabase";
-import { makeStyles } from "@rneui/base";
-import { Button, Text } from "@rneui/themed";
-import { useQueryClient } from "@tanstack/react-query";
+import { Profile, addUserToBook, removeUser } from "$lib/supabase";
+import { Button, Text, makeStyles } from "@rneui/themed";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams } from "expo-router";
-import { FlatList, View } from "react-native";
+import { useState } from "react";
+import { Alert, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type MemberListProps = {
@@ -23,27 +24,89 @@ function MembersList({
   stylesheet,
 }: MemberListProps) {
   const queryClient = useQueryClient();
+  const [addMemberOverlay, setAddMemberOverlay] = useState(false);
+  const addUserMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return await addUserToBook(id, email);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ["get-members", id] });
+      }
+    },
+  });
+
+  const removeUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await removeUser(id, userId);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        queryClient.invalidateQueries({ queryKey: ["get-members", id] });
+      }
+    },
+  });
+
   if (isLoading) {
     return <LoadingView />;
   }
 
   return (
     <FlatList
-      data={members}
       style={[stylesheet.membersList]}
+      refreshing={isRefreshing}
       onRefresh={() => {
         queryClient.invalidateQueries({ queryKey: ["get-members", id] });
       }}
-      refreshing={isRefreshing}
-      renderItem={({ item: { name, email } }) => (
+      data={members}
+      keyExtractor={({ id }) => id}
+      ListHeaderComponent={<Text h3>Members</Text>}
+      renderItem={({ item: { name, email, id } }) => (
         <View style={[stylesheet.nameContainer]}>
           <View>
             <Text>{email}</Text>
             {name ? <Text>{name}</Text> : undefined}
           </View>
-          <Button color="error" title="Remove" icon={{ name: "trash" }} />
+          <Button
+            color="error"
+            title="Remove"
+            icon={{ name: "trash", color: "white" }}
+            onPress={() => {
+              Alert.alert(
+                "Remove user",
+                `Are you sure you want to remove ${email} from this book`,
+                [
+                  { text: "No" },
+                  { text: "Yes", onPress: () => removeUserMutation.mutate(id) },
+                ],
+              );
+            }}
+          />
         </View>
       )}
+      ListFooterComponent={
+        <>
+          <Button
+            color="primary"
+            icon={{ name: "plus", color: "white" }}
+            title="Add member"
+            onPress={() => setAddMemberOverlay(true)}
+          />
+          <TextInputOverlay
+            visible={addMemberOverlay}
+            onDismis={() => {
+              setAddMemberOverlay(false);
+            }}
+            onSubmit={(email) => {
+              addUserMutation.mutate(email);
+              setAddMemberOverlay(false);
+            }}
+            label={"Email"}
+            inputMode={"email"}
+            okText="Add"
+          />
+        </>
+      }
     />
   );
 }
@@ -73,7 +136,7 @@ export default function BookSettings() {
 
   return (
     <SafeAreaView>
-      <Stack.Screen options={{ title: `${book.book_name}` }} />
+      <Stack.Screen options={{ title: `${book.book_name} Settings` }} />
       <MembersList
         id={id}
         isRefreshing={isMembersRefreshing}
@@ -95,6 +158,7 @@ const createStylesheet = makeStyles(() => {
       alignItems: "center",
       justifyContent: "space-between",
       flexDirection: "row",
+      paddingBottom: 20,
     },
   };
 });

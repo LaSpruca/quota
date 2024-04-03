@@ -1,14 +1,11 @@
 import LoadingView from "$lib/components/LoadingView";
 import { Profile as ProfileType, supabase, updateName } from "$lib/supabase";
-import { FontAwesome } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
 import { View, Alert } from "react-native";
 import {
   Button,
-  Input,
-  Overlay,
   Switch,
   useThemeMode,
   Text,
@@ -17,45 +14,7 @@ import {
 } from "@rneui/themed";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProfile } from "$lib/queries";
-
-type Stylesheet = ReturnType<typeof createStylesheet>;
-
-type SetNameModal = {
-  modalVisible: boolean;
-  name: string;
-  onSubmit: (newName: string) => void;
-  onClose: () => void;
-  stylesheet: Stylesheet;
-};
-function SetNameModal({
-  name: originalName,
-  onSubmit,
-  onClose,
-  modalVisible,
-  stylesheet,
-}: SetNameModal) {
-  const [name, setName] = useState(originalName);
-  return (
-    <Overlay
-      isVisible={modalVisible}
-      onRequestClose={onClose}
-      onBackdropPress={onClose}
-    >
-      <View style={[stylesheet.setNameModal]}>
-        <Input
-          label="New name"
-          value={name}
-          style={[stylesheet.setNameInput]}
-          onChangeText={(newName) => setName(newName)}
-        />
-        <View style={[stylesheet.setNameButtons]}>
-          <Button type="clear" title="Ok" onPress={() => onSubmit(name)} />
-          <Button type="solid" title="Cancel" onPress={onClose} />
-        </View>
-      </View>
-    </Overlay>
-  );
-}
+import TextInputOverlay from "$lib/components/Overlays/TextInputOverlay";
 
 type ProfileInnerProps = {
   loading: boolean;
@@ -130,14 +89,15 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
           }}
         />
       </View>
-      <SetNameModal
-        name={profile.name ?? profile.email ?? ""}
-        onClose={() => setModalVisible(false)}
-        modalVisible={modalVisible}
+      <TextInputOverlay
+        inputMode="text"
+        onDismis={() => setModalVisible(false)}
         onSubmit={(newName) => {
           updateNameMutation.mutate(newName);
         }}
-        stylesheet={stylesheet}
+        visible={modalVisible}
+        label={"New name"}
+        defaultText={profile.name ?? profile.email}
       />
       <View style={[stylesheet.ohOhButton]}>
         <Button title="Logout" onPress={() => supabase.auth.signOut()} />
