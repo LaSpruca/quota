@@ -10,10 +10,11 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import LoadingView from "$lib/components/LoadingView";
 import QuoteView from "$lib/components/QuoteView";
-import { Button, FAB } from "@rneui/themed";
+import { Button, FAB, SearchBar } from "@rneui/themed";
 import QuoteOptions from "$lib/components/Overlays/QuoteOptionsOverlay";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useBook, useQuotes } from "$lib/queries";
+import { fuzzy } from "fast-fuzzy";
 
 type HeaderButtonsProps = {
   isAdmin: boolean;
@@ -43,6 +44,7 @@ export default function BookView() {
   const queryClient = useQueryClient();
   const [addQuoteVisible, setAddQuoteVisible] = useState(false);
   const [editingQuote, setEditingQuote] = useState<null | Quote>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   if (Array.isArray(id)) return <View />;
 
@@ -82,7 +84,7 @@ export default function BookView() {
       }
     },
   });
-  const createQuote = useMutation({
+  const createQuoteMutation = useMutation({
     mutationFn: async (data: Parameters<typeof insertQuote>[0]) => {
       return await insertQuote(data);
     },
@@ -115,13 +117,36 @@ export default function BookView() {
     );
   }
 
+  const filteredQuotes = useMemo(
+    () =>
+      searchTerm !== ""
+        ? quotes.filter(
+            ({ quote, person }) =>
+              fuzzy(searchTerm, `${quote} ${person}`) > 0.75,
+          )
+        : quotes,
+    [quotes, searchTerm],
+  );
+
   return (
     <View>
       <Stack.Screen
         options={{ title: book.book_name, headerRight, headerShown: true }}
       />
       <FlatList
-        data={quotes}
+        ListHeaderComponent={
+          <SearchBar
+            containerStyle={[stylesheet.searchBar]}
+            onChangeText={setSearchTerm}
+            placeholder="Search"
+            value={searchTerm}
+            clearIcon={{ name: "backspace" }}
+            onClear={() => {
+              setSearchTerm("");
+            }}
+          />
+        }
+        data={filteredQuotes}
         keyExtractor={({ id }) => id}
         renderItem={({ item }) => {
           const { quote, person, date } = item;
@@ -142,6 +167,7 @@ export default function BookView() {
         }}
         contentContainerStyle={[stylesheet.container]}
         onRefresh={() => {
+          setSearchTerm("");
           queryClient.invalidateQueries({
             predicate: ({ queryKey: [_, queryId] }) => queryId === id,
           });
@@ -184,7 +210,7 @@ export default function BookView() {
         visible={addQuoteVisible}
         onDismis={() => setAddQuoteVisible(false)}
         onSubmit={({ date, quote, author }) => {
-          createQuote.mutate({
+          createQuoteMutation.mutate({
             quote,
             date: date.toISOString(),
             book: id,
@@ -213,5 +239,9 @@ const stylesheet = StyleSheet.create({
     minHeight: Dimensions.get("window").height,
 
     padding: 10,
+  },
+  searchBar: {
+    width: Dimensions.get("screen").width - 20,
+    backgroundColor: "#00000000",
   },
 });
