@@ -1,19 +1,38 @@
 import { Button, Input, Overlay, Text, makeStyles } from "@rneui/themed";
 import { useState } from "react";
 import { View } from "react-native";
-import DatePicker from "./DatePicker";
+import DatePicker from "../DatePicker";
 
-type AddQuoteOverlayProps = {
+type DeleteButtonProps = {
+  onDelete?: () => void;
+};
+function DeleteButton({ onDelete }: DeleteButtonProps) {
+  if (!onDelete) {
+    return <></>;
+  }
+  return (
+    <Button
+      color="error"
+      title="Delete"
+      onPress={onDelete}
+      icon={{ name: "trash" }}
+    />
+  );
+}
+
+type QuoteOptionsProps = {
   onSubmit: (quote: { quote: string; author: string; date: Date }) => void;
   onDismis: () => void;
   visible: boolean;
+  onDelete?: () => void;
 };
 
 export default function AddQuoteOverlay({
   onSubmit,
   onDismis,
   visible,
-}: AddQuoteOverlayProps) {
+  onDelete,
+}: QuoteOptionsProps) {
   const stylesheet = createStylesheet();
   const [date, setDate] = useState(new Date());
   const [quote, setQuote] = useState("");
@@ -52,6 +71,7 @@ export default function AddQuoteOverlay({
             onPress={() => onSubmit({ quote, author, date })}
           />
         </View>
+        <DeleteButton onDelete={onDelete} />
       </View>
     </Overlay>
   );

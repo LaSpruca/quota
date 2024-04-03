@@ -4,22 +4,35 @@ import { FontAwesome } from "@expo/vector-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, Stack } from "expo-router";
 import { useState } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
-import { Button, Input, Overlay, Switch, useThemeMode } from "@rneui/themed";
+import { View, Alert } from "react-native";
+import {
+  Button,
+  Input,
+  Overlay,
+  Switch,
+  useThemeMode,
+  Text,
+  makeStyles,
+  useTheme,
+} from "@rneui/themed";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useProfile } from "$lib/queries";
+
+type Stylesheet = ReturnType<typeof createStylesheet>;
 
 type SetNameModal = {
   modalVisible: boolean;
   name: string;
   onSubmit: (newName: string) => void;
   onClose: () => void;
+  stylesheet: Stylesheet;
 };
 function SetNameModal({
   name: originalName,
   onSubmit,
   onClose,
   modalVisible,
+  stylesheet,
 }: SetNameModal) {
   const [name, setName] = useState(originalName);
   return (
@@ -53,6 +66,8 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
   const queryClient = useQueryClient();
   const themeMode = useThemeMode();
   const [modalVisible, setModalVisible] = useState(false);
+  const stylesheet = createStylesheet();
+  const { theme } = useTheme();
 
   const updateNameMutation = useMutation({
     mutationFn: async (newName: string) => {
@@ -93,7 +108,7 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
       <Text style={[stylesheet.displayNameText]}>Display name</Text>
       <View style={[stylesheet.usernameTextWrapper]}>
         <Button
-          icon={<FontAwesome name="pencil" size={15} />}
+          icon={{ name: "pencil", size: 15, color: theme.colors.black }}
           type="clear"
           onPress={() => setModalVisible(true)}
         />
@@ -122,6 +137,7 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
         onSubmit={(newName) => {
           updateNameMutation.mutate(newName);
         }}
+        stylesheet={stylesheet}
       />
       <View style={[stylesheet.ohOhButton]}>
         <Button title="Logout" onPress={() => supabase.auth.signOut()} />
@@ -161,64 +177,66 @@ export default function Profile() {
   );
 }
 
-const stylesheet = StyleSheet.create({
-  profileContainer: {
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    flexDirection: "column",
-  },
-  usernameTextWrapper: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 10,
-    paddingBottom: 30,
-  },
-  usernameText: {
-    fontSize: 35,
-    fontWeight: "bold",
-  },
-  emailText: {
-    fontStyle: "italic",
-    color: "#000000aa",
-  },
+const createStylesheet = makeStyles((theme) => {
+  return {
+    profileContainer: {
+      display: "flex",
+      justifyContent: "flex-start",
+      alignItems: "center",
+      flexDirection: "column",
+    },
+    usernameTextWrapper: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 10,
+      paddingBottom: 30,
+    },
+    usernameText: {
+      fontSize: 35,
+      fontWeight: "bold",
+    },
+    emailText: {
+      fontStyle: "italic",
+      color: theme.colors.black,
+    },
 
-  displayNameText: {
-    fontSize: 25,
-    fontWeight: "400",
-  },
+    displayNameText: {
+      fontSize: 25,
+      fontWeight: "400",
+    },
 
-  setNameModal: {
-    display: "flex",
-    minWidth: 200,
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-  },
-  setNameInput: {
-    width: "75%",
-  },
-  setNameButtons: {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    gap: 20,
-  },
-  ohOhButton: {
-    display: "flex",
-    width: "100%",
-    flexDirection: "row",
-    paddingTop: 20,
-    justifyContent: "space-evenly",
-  },
+    setNameModal: {
+      display: "flex",
+      minWidth: 200,
+      paddingHorizontal: 10,
+      paddingVertical: 15,
+    },
+    setNameInput: {
+      width: "75%",
+    },
+    setNameButtons: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "flex-end",
+      gap: 20,
+    },
+    ohOhButton: {
+      display: "flex",
+      width: "100%",
+      flexDirection: "row",
+      paddingTop: 20,
+      justifyContent: "space-evenly",
+    },
 
-  darkModeSwitch: {
-    display: "flex",
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 15,
-    padding: 20,
-  },
+    darkModeSwitch: {
+      display: "flex",
+      alignItems: "center",
+      flexDirection: "row",
+      gap: 15,
+      padding: 20,
+    },
+  };
 });

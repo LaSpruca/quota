@@ -1,5 +1,5 @@
-import { Dimensions, StyleSheet } from "react-native";
-import { View, Text, Pressable } from "react-native";
+import { Dimensions, StyleSheet, View, Pressable } from "react-native";
+import { Text, makeStyles } from "@rneui/themed";
 
 type QuoteViewProps = {
   quote: string;
@@ -13,6 +13,7 @@ function QuoteViewInner({
   author,
   date,
 }: Omit<QuoteViewProps, "onHold">) {
+  const stylesheet = createStylesheet();
   return (
     <View style={[stylesheet.container]}>
       <Text style={[stylesheet.quote]}>{quote}</Text>
@@ -35,28 +36,31 @@ export default function QuoteView({ onHold, ...props }: QuoteViewProps) {
   }
 }
 
-const stylesheet = StyleSheet.create({
-  container: {
-    padding: 10,
-    shadowColor: "#aaa",
-    elevation: 2,
-    borderRadius: 1,
-    width: Dimensions.get("screen").width - 50,
-  },
+const createStylesheet = makeStyles((theme) => {
+  return {
+    container: {
+      padding: 10,
+      shadowColor: theme.mode === "dark" ? "#111" : "#aaa",
+      elevation: 2,
+      borderRadius: 1,
+      width: Dimensions.get("screen").width - 50,
+      backgroundColor: theme.mode === "dark" ? "#FFFFFF11" : undefined,
+    },
 
-  quote: {
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 10,
+    quote: {
+      paddingTop: 10,
+      paddingBottom: 20,
+      paddingHorizontal: 10,
 
-    fontSize: 17,
-    fontWeight: "700",
+      fontSize: 17,
+      fontWeight: "700",
 
-    textAlign: "center",
-  },
+      textAlign: "center",
+    },
 
-  author: {
-    fontWeight: "300",
-    textAlign: "right",
-  },
+    author: {
+      fontWeight: "300",
+      textAlign: "right",
+    },
+  };
 });

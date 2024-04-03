@@ -1,3 +1,4 @@
+import { makeStyles } from "@rneui/themed";
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
@@ -8,18 +9,18 @@ type BookViewProps = {
   id: string;
 };
 export default function BookView(props: BookViewProps) {
-  const [viewStyle, setViewStyle] = useState([stylesheet.container]);
+  const [containerTouched, setContainerTouched] = useState(false);
+  const stylesheet = createStylesheet(containerTouched);
+
   return (
     <Pressable
-      onTouchStart={() =>
-        setViewStyle([stylesheet.container, stylesheet.containerTouched])
-      }
-      onTouchEnd={() => setViewStyle([stylesheet.container])}
+      onTouchStart={() => setContainerTouched(true)}
+      onTouchEnd={() => setContainerTouched(false)}
       onPress={() =>
         router.push({ pathname: "/book/[id]", params: { id: props.id } })
       }
     >
-      <View style={viewStyle}>
+      <View style={[stylesheet.container]}>
         <Text style={[stylesheet.title]}>{props.bookName}</Text>
         <Text style={[stylesheet.by]}>{props.author}</Text>
       </View>
@@ -27,42 +28,39 @@ export default function BookView(props: BookViewProps) {
   );
 }
 
-const stylesheet = StyleSheet.create({
-  container: {
-    width: 150,
-    maxWidth: 150,
-    height: 250,
-    justifyContent: "space-evenly",
-    flex: 1,
-    padding: 10,
+const createStylesheet = makeStyles((_theme, containerTouched: boolean) => {
+  return {
+    container: {
+      width: 150,
+      maxWidth: 150,
+      height: 250,
+      justifyContent: "space-evenly",
+      flex: 1,
+      padding: 10,
 
-    borderColor: "#9e5b2d",
-    borderWidth: 5,
-    borderLeftWidth: 15,
-    borderRadius: 1,
+      borderColor: !containerTouched ? "#9e5b2d" : "#784522",
+      borderWidth: 5,
+      borderLeftWidth: 15,
+      borderRadius: 1,
 
-    backgroundColor: "#c47138",
+      backgroundColor: !containerTouched ? "#c47138" : "#9e5b2d",
 
-    shadowColor: "#000",
-    elevation: 5,
-  },
+      shadowColor: "#000",
+      elevation: 5,
+    },
 
-  containerTouched: {
-    backgroundColor: "#9e5b2d",
-    borderColor: "#784522",
-  },
+    title: {
+      textAlign: "center",
+      fontSize: 20,
+      fontWeight: "bold",
 
-  title: {
-    textAlign: "center",
-    fontSize: 20,
-    fontWeight: "bold",
+      color: "#fff",
+    },
 
-    color: "#fff",
-  },
-
-  by: {
-    fontStyle: "italic",
-    textAlign: "right",
-    color: "rgba(255, 255, 255, 0.9)",
-  },
+    by: {
+      fontStyle: "italic",
+      textAlign: "right",
+      color: "rgba(255, 255, 255, 0.9)",
+    },
+  };
 });

@@ -3,19 +3,14 @@ import HR from "$lib/components/HR";
 import LoadingView from "$lib/components/LoadingView";
 import { useBooks } from "$lib/queries";
 import { useSession } from "$lib/supabase";
-import { Button } from "@rneui/themed";
+import { Button, Text, makeStyles } from "@rneui/themed";
 import { useQueryClient } from "@tanstack/react-query";
 import { Stack, useRouter } from "expo-router";
 import { useMemo } from "react";
-import {
-  Text,
-  View,
-  ScrollView,
-  StyleSheet,
-  RefreshControl,
-} from "react-native";
+import { View, ScrollView, StyleSheet, RefreshControl } from "react-native";
 
 export default function Index() {
+  const stylesheet = createStylesheet();
   const session = useSession()!;
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -25,7 +20,9 @@ export default function Index() {
     () =>
       books
         ? books
-            .filter(({ owner }) => owner === session.user.id)
+            .filter(
+              ({ owner }) => session !== null && owner === session.user.id,
+            )
             .map(
               ({ book_name: bookName, id, owner_email: { email, name } }) => (
                 <BookView
@@ -37,14 +34,16 @@ export default function Index() {
               ),
             )
         : [],
-    [books],
+    [books, session],
   );
 
   const othersBooks = useMemo(
     () =>
       books
         ? books
-            .filter(({ owner }) => owner !== session.user.id)
+            .filter(
+              ({ owner }) => session !== null && owner !== session.user.id,
+            )
             .map(
               ({ book_name: bookName, id, owner_email: { email, name } }) => (
                 <BookView
@@ -56,7 +55,7 @@ export default function Index() {
               ),
             )
         : [],
-    [books],
+    [books, session],
   );
   if (isLoading) {
     return <LoadingView />;
@@ -98,18 +97,20 @@ export default function Index() {
   );
 }
 
-const stylesheet = StyleSheet.create({
-  booksContainer: {
-    padding: 10,
-    gap: 15,
-    display: "flex",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-evenly",
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
+const createStylesheet = makeStyles((theme) => {
+  return {
+    booksContainer: {
+      padding: 10,
+      gap: 15,
+      display: "flex",
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-evenly",
+    },
+    title: {
+      fontSize: 30,
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+  };
 });
