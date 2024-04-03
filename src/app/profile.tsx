@@ -67,7 +67,7 @@ function ProfileInner({ loading, profile }: ProfileInnerProps) {
       <Text style={[stylesheet.displayNameText]}>Display name</Text>
       <View style={[stylesheet.usernameTextWrapper]}>
         <Button
-          icon={{ name: "pencil", size: 15, color: theme.colors.black }}
+          icon={{ name: "edit", color: theme.colors.black }}
           type="clear"
           onPress={() => setModalVisible(true)}
         />

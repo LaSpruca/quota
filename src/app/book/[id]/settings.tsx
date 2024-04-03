@@ -4,12 +4,13 @@ import { useBook, useMembers } from "$lib/queries";
 import {
   Profile,
   addUserToBook,
+  deleteBook,
   removeUser,
   updateBookName,
 } from "$lib/supabase";
 import { Button, Text, makeStyles, useTheme } from "@rneui/themed";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, FlatList, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -75,7 +76,7 @@ function MembersList({
           <Button
             color="error"
             title="Remove"
-            icon={{ name: "trash", color: "white" }}
+            icon={{ name: "delete", color: "white" }}
             onPress={() => {
               Alert.alert(
                 "Remove user",
@@ -93,7 +94,7 @@ function MembersList({
         <>
           <Button
             color="primary"
-            icon={{ name: "plus", color: "white" }}
+            icon={{ name: "add", color: "white" }}
             title="Add member"
             onPress={() => setAddMemberOverlay(true)}
           />
@@ -119,6 +120,7 @@ function MembersList({
 export default function BookSettings() {
   const stylesheet = createStylesheet();
   const { id } = useLocalSearchParams();
+  const router = useRouter();
 
   if (Array.isArray(id)) {
     return <></>;
@@ -133,6 +135,20 @@ export default function BookSettings() {
     data: members,
     isRefetching: isMembersRefreshing,
   } = useMembers(id);
+  const deleteBookMutation = useMutation({
+    mutationFn: async () => {
+      return await deleteBook(id);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        router.dismissAll();
+        queryClient.removeQueries({
+          predicate: ({ queryKey: [_, second] }) => second === id,
+        });
+        queryClient.invalidateQueries({ queryKey: ["get-books"] });
+      }
+    },
+  });
   const updateBookNameMutation = useMutation({
     mutationFn: async (newName: string) => {
       return await updateBookName(id, newName);
@@ -164,7 +180,7 @@ export default function BookSettings() {
         </Text>
         <View style={[stylesheet.usernameTextWrapper]}>
           <Button
-            icon={{ name: "pencil", size: 15, color: theme.colors.black }}
+            icon={{ name: "edit", size: 15, color: theme.colors.black }}
             type="clear"
             onPress={() => setModalVisible(true)}
           />
@@ -191,6 +207,25 @@ export default function BookSettings() {
         isLoading={membersLoading}
         members={members}
       />
+      <View style={[stylesheet.membersList, { paddingTop: 10 }]}>
+        <Button
+          color="error"
+          title="Delete Book"
+          icon={{ name: "delete", color: "white" }}
+          onPress={() =>
+            Alert.alert(
+              "Delete Book",
+              "Are you sure you want to delete " +
+                book.book_name +
+                ".\nThis action cannot be undone",
+              [
+                { text: "Yes", onPress: () => deleteBookMutation.mutate() },
+                { text: "No" },
+              ],
+            )
+          }
+        />
+      </View>
     </SafeAreaView>
   );
 }

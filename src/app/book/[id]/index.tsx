@@ -25,7 +25,7 @@ function HeaderButtons({ isAdmin, id }: HeaderButtonsProps) {
   if (isAdmin) {
     button = (
       <Button
-        icon={{ name: "gear", color: "white" }}
+        icon={{ name: "settings", color: "white" }}
         title="Book Settings"
         titleStyle={[{ paddingLeft: 5 }]}
         onPress={() =>
@@ -149,7 +149,7 @@ export default function BookView() {
         refreshing={quotesRefetching || bookRefetching}
       />
       <FAB
-        icon={{ name: "plus", color: "white" }}
+        icon={{ name: "history-edu", color: "white" }}
         onPress={() => setAddQuoteVisible(true)}
       />
       <QuoteOptions

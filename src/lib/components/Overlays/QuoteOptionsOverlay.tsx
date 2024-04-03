@@ -1,13 +1,12 @@
 import { Button, Input, Overlay, Text, makeStyles } from "@rneui/themed";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { Dimensions, View } from "react-native";
 import DatePicker from "../DatePicker";
 
 type DeleteButtonProps = {
   onDelete?: () => void;
-  stylesheet: ReturnType<typeof createStylesheet>;
 };
-function DeleteButton({ onDelete, stylesheet }: DeleteButtonProps) {
+function DeleteButton({ onDelete }: DeleteButtonProps) {
   if (!onDelete) {
     return <></>;
   }
@@ -16,7 +15,7 @@ function DeleteButton({ onDelete, stylesheet }: DeleteButtonProps) {
       color="error"
       title="Delete"
       onPress={onDelete}
-      icon={{ name: "trash", color: "white" }}
+      icon={{ name: "delete", color: "white" }}
     />
   );
 }
@@ -71,11 +70,11 @@ export default function QuoteOptionsOverlay({
       onBackdropPress={onDismis}
       animationType="fade"
     >
-      <View>
+      <View style={[stylesheet.overlayContaier]}>
         <Input label="Quote" value={quote} onChangeText={setQuote} />
         <Input label="Author" value={author} onChangeText={setAuthor} />
         <View style={[stylesheet.dateContainer]}>
-          <Text style={[stylesheet.actualDateText]}>
+          <Text>
             <Text style={[stylesheet.dateText]}>Date: </Text>
             {date.getDate()}/{date.getMonth()}/{date.getFullYear()}
           </Text>
@@ -90,7 +89,7 @@ export default function QuoteOptionsOverlay({
           visible={dateModalOpen}
         />
         <View style={[stylesheet.buttonsContainer]}>
-          <DeleteButton onDelete={onDelete} stylesheet={stylesheet} />
+          <DeleteButton onDelete={onDelete} />
           <Button
             title={onDelete ? "Add" : "Update"}
             onPress={() => onSubmit({ quote, author, date })}
@@ -104,11 +103,13 @@ export default function QuoteOptionsOverlay({
 
 const createStylesheet = makeStyles(() => {
   return {
+    overlayContaier: {
+      maxWidth: Dimensions.get("window").width * 0.8,
+    },
+
     dateText: {
       fontWeight: "bold",
     },
-
-    actualDateText: {},
 
     dateContainer: {
       display: "flex",
