@@ -17,6 +17,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "nz.laspruca.quota",
       "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
