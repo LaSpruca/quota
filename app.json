@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "quota",
+    "name": "Quota",
     "slug": "quota",
     "version": "2.0.0",
     "orientation": "portrait",
@@ -33,11 +33,11 @@
       [
         "expo-build-properties",
         {
-          "ios": {
-            "newArchEnabled": true
-          },
+          "ios": {},
           "android": {
-            "newArchEnabled": true
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 31,
+            "buildToolsVersion": "31.0.0"
           }
         }
       ]
