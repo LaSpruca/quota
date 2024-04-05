@@ -18,6 +18,7 @@
     },
     "android": {
       "package": "nz.laspruca.quota",
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -37,8 +38,7 @@
           "android": {
             "compileSdkVersion": 34,
             "targetSdkVersion": 31,
-            "buildToolsVersion": "31.0.0",
-            "versionCode": 4
+            "buildToolsVersion": "31.0.0"
           }
         }
       ]
