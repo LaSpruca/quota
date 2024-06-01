@@ -8,8 +8,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: "Quota",
-    slug: "quota",
+    name: config.name!,
+    slug: config.slug!,
 
     android: {
       ...config.android,
